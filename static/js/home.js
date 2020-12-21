@@ -23,7 +23,7 @@ function createSystemInfo(systemName)
   newTemplate.id = "system-" + systemName;
   newTemplate.classList.add("system-list");
   newTemplate.querySelector(".system-title").textContent = systemName;
-  newTemplate.style.display = "block";
+  newTemplate.style.display = "initial";
   systemList.appendChild(newTemplate);
 
   newTemplate.querySelector(".remove-system").addEventListener("click", function() { removeSystem(systemName); })
@@ -87,7 +87,7 @@ function loadData(system)
     const data = parseData(request.response);
     systemForm.querySelector(".contract-number").textContent = data.contracts;
     systemForm.querySelector(".loading-text").style.display = "none";
-    systemForm.querySelector(".contract-data").style.display = "block";
+    systemForm.querySelector(".contract-data").style.display = "initial";
   }
 
   request.send()
