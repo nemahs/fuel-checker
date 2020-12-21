@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+
+<html>
+  <head>
+    <title>Refuelling Checker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{url_for('static', filename='css/home.css')}}" rel=stylesheet type="text/css">
+    {% if current_user.is_authenticated %}
+      <script type="text/javascript">var userSystems = JSON.parse('{{ current_user.systemList|tojson }}');</script>
+    {% endif %}
+    <script src="{{url_for('static', filename='js/home.js')}}"></script>
+  </head>
+
+  <body>
+    <div id="login-header">
+      {% if current_user.is_authenticated %}
+        Logged in as: {{ current_user.characterName }} <a href={{ url_for('logout') }}>Log out</a>
+      {% else %}
+        <a href={{loginURL}}>
+          <img src="static/images/eve-sso-login-black-large.png">
+        </a>
+      {% endif %}
+    </div>
+    <br />
+
+    <form id="add-system-form">
+      <input type="text" list="systems" />
+      <datalist id="systems">
+        {% for system in systemList %}
+          <option>{{system}}</option>
+        {% endfor %}
+      </datalist>
+      <button type="submit" id="add-system">+ Add System</button>
+    </form>
+  </body>
+
+
+  <div id="system-list"></div>
+
+
+  <div id="system-template" style="display: none;">
+    <span class="system-title"></span>
+    <button class="remove-system">X</button>
+  </div>
+</html>

@@ -1,0 +1,28 @@
+
+body {
+  background-color: #101010;
+  color: antiquewhite;
+}
+
+a {
+  color: lightblue;
+}
+
+#login-header {
+  float: right;
+}
+
+
+#system-list {
+  width: 100%;
+  height: 50%;
+}
+
+/* TODO: Replace with Bootstrap colors */
+
+.system-list {
+  background-color: lightgrey;
+  border: 1px solid darkslategrey;
+  border-radius: 8px;
+  width: 20%;
+}
