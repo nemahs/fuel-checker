@@ -14,7 +14,8 @@
   <body>
     <div id="login-header">
       {% if current_user.is_authenticated %}
-        Logged in as: {{ current_user.characterName }} <a href={{ url_for('logout') }}>Log out</a>
+        Logged in as: {{ current_user.characterName }} <a href={{ url_for('logout') }}>Log out</a><br/>
+        Time to refresh: <span id="timerValue"></span>
       {% else %}
         <a href={{loginURL}}>
           <img src="static/images/eve-sso-login-black-large.png">

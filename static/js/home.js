@@ -57,6 +57,21 @@ function removeSystem(systemName)
   request.send();
 }
 
+function formatTime(time)
+{
+  const minutes = Math.floor(time / 60);
+  const seconds = time % 60;
+
+  var output = `${seconds}s`;
+
+  if (minutes > 0)
+  {
+    output = `${minutes}m ` + output;
+  }
+  
+  return output;
+}
+
 function populateList()
 {
   if (typeof userSystems === 'undefined')
@@ -64,19 +79,23 @@ function populateList()
     return; // User has no system list
   }
 
-  console.log(userSystems);
   for (system of userSystems)
   {
     if (system !== "")
     {
       createSystemInfo(system);
-      loadData(system)
     }
   }
 }
 
 function loadData(system)
 {
+  if (system === "")
+  {
+    return;
+  }
+
+
   const systemForm = getSystemNode(system);
 
   var request = new XMLHttpRequest();
@@ -108,8 +127,29 @@ function parseData(htmlResponse)
   return result;
 }
 
+const REFRESH_INTERVAL_SECONDS = 300;
+var timeToRefresh = REFRESH_INTERVAL_SECONDS;
+function timerFunc() 
+{
+  const timerDisplay = document.querySelector("#timerValue");
+  timeToRefresh--;
+
+  if (timeToRefresh <= 0)
+  {
+    for (system of userSystems)
+    {
+      loadData(system);
+    }
+
+    timeToRefresh = REFRESH_INTERVAL_SECONDS;
+  }
+
+  timerDisplay.textContent = formatTime(timeToRefresh);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const addSystemForm = document.querySelector("#add-system-form");
+  userSystems = userSystems.filter(system => system !== "");
 
   addSystemForm.addEventListener('submit', (event) => {
     createSystemInfo(event.target[0].value);
@@ -119,4 +159,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   populateList();
+
+  window.setInterval(timerFunc, 1000);
 });
