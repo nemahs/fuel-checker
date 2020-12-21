@@ -77,13 +77,35 @@ function populateList()
 
 function loadData(system)
 {
+  const systemForm = getSystemNode(system);
+
   var request = new XMLHttpRequest();
   request.open("GET", "/contracts/" + system)
+  request.responseType = "json";
   request.onload = function() {
     console.log(request.response)
+    const data = parseData(request.response);
+    systemForm.querySelector(".contract-number").textContent = data.contracts;
+    systemForm.querySelector(".loading-text").style.display = "none";
+    systemForm.querySelector(".contract-data").style.display = "block";
   }
 
   request.send()
+}
+
+function parseData(htmlResponse)
+{
+  var result = new Object();
+  result.contracts = 0;
+
+  for (contract of htmlResponse)
+  {
+    console.log(contract);
+    ++result.contracts;
+  }
+
+  console.log(result);
+  return result;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
