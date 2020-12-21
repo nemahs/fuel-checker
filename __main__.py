@@ -100,7 +100,11 @@ def login():
 
 @app.route("/systems/add/<string:name>")
 @login_required
-def addSystem(name):
+def addSystem(name: str) -> Response:
+  """Endpoint to add a system to the user's system list.
+
+  @param name System name to add.
+  """
   if name not in current_user.systemList:
     db_session.add(current_user)
     current_user.systemList.append(name)
@@ -111,7 +115,11 @@ def addSystem(name):
 
 @app.route("/systems/remove/<string:name>")
 @login_required
-def removeSystem(name:str) -> Response:
+def removeSystem(name: str) -> Response:
+  """Endpoint to remove a system from the user's system list.
+
+  @param name System name to remove.
+  """
   if name in current_user.systemList:
     current_user.systemList.remove(name)
     db_session.add(current_user)
@@ -121,10 +129,10 @@ def removeSystem(name:str) -> Response:
   return Response(status=304)
 
 @app.route("/contracts")
-@login_required
+@esi_required
 def getContracts():
   """Retrieve the list of corp contracts."""
-  result = ESI.getCorpContracts(GOON_CORP_ID, current_user.getAccessKey(CLIENT_ID, SECRET_KEY))
+  result = ESI.getCorpContracts(GOON_CORP_ID, authToken)
   result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID and contract['status'] == 'outstanding']
   print(result)
   return jsonify(result)
@@ -137,15 +145,11 @@ def testFunction(id):
 @app.route("/contracts/<string:name>")
 @esi_required
 def getSystemContracts(name: str):
-  print("Getting contracts")
   result = ESI.getCorpContracts(GOON_CORP_ID, authToken)
   result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID and contract['status'] == 'outstanding' and contract['type'] == 'item_exchange']
-  print(f"Corp contracts: {result}")
   systems = {contract['start_location_id'] for contract in result}
   structures = {system: ESI.getStructureInfo(system, authToken)['solar_system_id'] for system in systems}
-  print(f"Structures: {structures}")
   systemContracts = [contract for contract in result if structures[contract['start_location_id']] == systemList[name]]
-  print(systemContracts)
   return jsonify(systemContracts)
 
 @app.route("/logout")
