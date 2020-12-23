@@ -222,7 +222,7 @@ def getContractDetails(contract_id: int, auth_token: str, corp_id: int = None, c
     else:
         endpoint = f"contracts/public/items/{contract_id}"
 
-    return _makeCall(endpoint)
+    return _makeCall(endpoint, auth_token)
 
 
 def getStructureInfo(structure_id: int, auth_token: str):

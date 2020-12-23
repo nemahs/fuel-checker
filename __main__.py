@@ -151,7 +151,7 @@ def getSystemContracts(name: str):
   structures = {system: ESI.getStructureInfo(system, authToken)['solar_system_id'] for system in systems}
   systemContracts = [contract for contract in result if structures[contract['start_location_id']] == systemList[name]]
 
-  for contracts in systemContracts:
+  for contract in systemContracts:
     details = ESI.getContractDetails(contract['contract_id'], authToken, GOON_CORP_ID)
     contract['details'] = details
 

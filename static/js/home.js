@@ -1,3 +1,15 @@
+const filteredItems = 
+{
+  17888: "Nitrogen Isotopes",
+  17887: "Oxygen Isotopes",
+  17889: "Hydrogen Isotopes",
+  16274: "Helium Isotopes",
+  16275: "Stront"
+}
+
+function disable(node) { node.style.display = "none"; }
+function enable(node)  { node.style.display = "initial"; }
+
 function getSystemNode(systemName)
 {
   const systemList = document.querySelector("#system-list");
@@ -23,7 +35,7 @@ function createSystemInfo(systemName)
   newTemplate.id = "system-" + systemName;
   newTemplate.classList.add("system-list");
   newTemplate.querySelector(".system-title").textContent = systemName;
-  newTemplate.style.display = "initial";
+  enable(newTemplate);
   systemList.appendChild(newTemplate);
 
   newTemplate.querySelector(".remove-system").addEventListener("click", function() { removeSystem(systemName); })
@@ -72,6 +84,16 @@ function formatTime(time)
   return output;
 }
 
+function formatNumber(number)
+{
+  if (number > 1000000)
+  {
+    return (number / 1000000).toFixed(2) + "M";
+  }
+
+  return Math.floor(number / 1000) + "," + String(number % 1000).padStart(3, '0');
+}
+
 function populateList()
 {
   if (typeof userSystems === 'undefined')
@@ -105,25 +127,76 @@ function loadData(system)
     console.log(request.response)
     const data = parseData(request.response);
     systemForm.querySelector(".contract-number").textContent = data.contracts;
-    systemForm.querySelector(".loading-text").style.display = "none";
-    systemForm.querySelector(".contract-data").style.display = "initial";
+
+    removeAllChildNodes(systemForm.querySelector('.totals'));
+    for (const [key, value] of data['totals'])
+    {
+      var totalNode = document.createElement('li');
+      totalNode.classList.add(filteredItems[key].split(' ')[0]);
+      totalNode.appendChild(document.createTextNode(`${filteredItems[key]}: ${formatNumber(value)}`));
+      systemForm.querySelector(".totals").appendChild(totalNode);
+      console.log(`Adding ${totalNode}`);
+    }
+
+    disable(systemForm.querySelector(".loading-text"));
+    enable(systemForm.querySelector(".contract-data"));
   }
 
   request.send()
+}
+
+function removeAllChildNodes(node)
+{
+  while (node.firstChild)
+  {
+    node.removeChild(node.firstChild);
+  }
+}
+
+function countItem(itemID, data, result)
+{
+  var success = false;
+
+  for (item of data['details'])
+  {
+    if (item['type_id'] == itemID)
+    {
+      if (!result.totals.has(itemID))
+      {
+        result.totals.set(itemID, 0);
+      }
+
+      result.totals.set(itemID, result.totals.get(itemID) + item['quantity']);
+      success = true;
+    }
+  }
+
+  return success;
 }
 
 function parseData(htmlResponse)
 {
   var result = new Object();
   result.contracts = 0;
+  result.totals = new Map();
 
   for (contract of htmlResponse)
   {
     console.log(contract);
-    ++result.contracts;
+
+    var success = false;
+    for (item in filteredItems)
+    {
+      success |= countItem(item, contract, result);
+      console.log(result);
+    }
+
+    if (success)
+    {
+      ++result.contracts;
+    }
   }
 
-  console.log(result);
   return result;
 }
 

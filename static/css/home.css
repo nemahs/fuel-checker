@@ -1,6 +1,6 @@
 
 body {
-  background-color: #101010;
+  background-color: #140d0f;
   color: antiquewhite;
 }
 
@@ -43,4 +43,26 @@ a {
 .system-list .contract-number {
   font-size: 3em;
   font-weight: bold;
+}
+
+
+.system-list ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.gallente,.Oxygen {
+  color: #576866;
+}
+
+.amarr,.Helium {
+  color: #bba183;
+}
+
+.minmatar,.Nitrogen {
+  color: #8c5055;
+}
+
+.caldari,.Hydrogen {
+  color: #819f8a;
 }
