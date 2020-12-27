@@ -2,6 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, Response
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from sqlalchemy.orm import Session
+from sassutils.wsgi import SassMiddleware
 
 from typing import Optional
 from datetime import datetime, timedelta
@@ -15,6 +16,10 @@ from .models.User import User
 app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+app.wsgi_app = SassMiddleware(app.wsgi_app, {
+  __package__: ('static/sass', 'static/css', '/static/css/')
+})
 
 CLIENT_ID: str = "e7f7b4cce62046bc93fdd765955f4cb0"
 SECRET_KEY: str = "FaGwj7piUb5mVWPxhdby3Z5yli0d91hadzeerJuL"
