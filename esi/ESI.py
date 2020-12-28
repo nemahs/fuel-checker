@@ -17,12 +17,21 @@ class ESI_SCOPES(str, Enum):
 
 BASE_LOGIN_URL: str = "https://login.eveonline.com"
 
-def _makeCall(endpoint: str, access_token: str = None, version: str = "latest", page: int = None):
+class METHOD(Enum):
+    """HTTP Method to use in call."""
+
+    GET=1
+    POST=2
+
+def _makeCall(endpoint: str, access_token: str = None, version: str = "latest", page: int = None, method: METHOD = METHOD.GET, data = None):
     """Send a call to the ESI REST server.
 
     @param endpoint     Endpoint to get results from.
     @param access_token Character ESI authentication token. Optional.
     @param version      ESI version to use. Defaults to latest.
+    @param page         Which page of results to return. Optional.
+    @param method       HTTP method to use. Defaults to GET.
+    @param data         Data dict to use in call. Used for POST requests. Optional.
     @return             Results of ESI call.
 
     @throws Exception if ESI could not be contacted
@@ -33,12 +42,14 @@ def _makeCall(endpoint: str, access_token: str = None, version: str = "latest", 
     if access_token is not None:
         HEADERS["Authorization"] = f"Bearer {access_token}"
 
+    if method == METHOD.GET:
+        params = {}
+        if page is not None:
+            params['page'] = page
 
-    params = {}
-    if page is not None:
-        params['page'] = page
-
-    response = requests.get(f"{BASE_URL}{endpoint}", headers=HEADERS, params=params)
+        response = requests.get(f"{BASE_URL}{endpoint}", headers=HEADERS, params=params)
+    else:
+        response = requests.post(f"{BASE_URL}{endpoint}", headers=HEADERS, data=data)
 
     if response.status_code == requests.codes['ok']:
         return response.json()
@@ -111,32 +122,33 @@ def authenticateUser(code: str, secret_key: str, client_id: str):
     raise Exception("Failed to authenticate user: " + response.text)
 
 
-def getIDs(names : List[str], auth_code):
-    BASE_URL: str = f"https://esi.evetech.net/latest/"
-    HEADERS = {'accept': 'application/json' }
+def getIDs(names : List[str]):
+    """Get IDs from a set of names.
 
+    @param names    List of names to get ids for.
+    @return         JSON response containing requested ids.
+    """
     if not names:
         return list()
 
     data = {'names': names}
-    print(data)
 
-    response = requests.post(BASE_URL + "universe/ids/", headers=HEADERS, data=data)
-    print(response)
-    return response.json()
+    return _makeCall("universe/ids/", method=METHOD.POST, data=data)
 
 
 def getNames(ids : List[int]):
-    BASE_URL: str = "https://esi.evetech.net/latest/"
-    HEADERS = {'accept': 'application/json'}
+    """Get names from a set of IDs.
 
+    @param ids  List of IDs to get names for.
+    @return     JSON response containing requested names.
+    """
     if not ids:
         return list()
 
     data = {'ids': ids}
 
-    response = requests.post(BASE_URL + "universe/names/", headers=HEADERS, data=data)
-    return response.json()
+    return _makeCall("universe/names/", method=METHOD.POST, data=data)
+
 
 def validateUser(accessKey: str):
     """Validate an access key and get information about the user.
