@@ -4,7 +4,7 @@
   <head>
     <title>Refuelling Checker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="{{url_for('static', filename='css/home.scss.css')}}" rel=stylesheet type="text/css">
+    <link href="{{url_for('static', filename='css/home.css')}}" rel=stylesheet type="text/css">
     {% if current_user.is_authenticated %}
       <script type="text/javascript">var userSystems = JSON.parse('{{ current_user.systemList|tojson }}');</script>
     {% endif %}
@@ -48,6 +48,11 @@
     <div class="contract-data" style="display: none;">
       <span class="contract-number"></span> contracts<br />
       <ul class="totals"></ul>
+
+      <div class="nonAllianceContracts" style="display:none;">
+        <span class="nonAllianceNumber"></span> non-alliance contracts</br />
+        <ul class="nameList"></ul>
+      </div>
     </div>
   </div>
 </html>

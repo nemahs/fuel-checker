@@ -2,10 +2,14 @@ class ParsedResults
 {
   contracts: number;
   totals: Map<number, number>;
+  nonAllianceName: Set<string>;
+  nonAllianceContracts: number;
 
   constructor() {
     this.contracts = 0;
     this.totals = new Map();
+    this.nonAllianceContracts = 0;
+    this.nonAllianceName = new Set();
   }
 }
 
@@ -29,6 +33,9 @@ const filteredItems: Map<number, string> = new Map(
   [16274, "Helium Isotopes"],
   [16275, "Stront"]
 ]);
+
+
+const GOON_ALLIANCE_ID: number = 1354830081;
 
 function disableNode(node: HTMLElement) { node.style.display = "none"; }
 function enableNode(node: HTMLElement)  { node.style.display = "initial"; }
@@ -160,17 +167,38 @@ function loadData(system: string)
     for (const [key, value] of data.totals)
     {
       var totalNode = document.createElement('li');
-      totalNode.classList.add(filteredItems[key].split(' ')[0]);
-      totalNode.appendChild(document.createTextNode(`${filteredItems[key]}: ${formatNumber(value)}`));
+      totalNode.classList.add(filteredItems.get(key).split(' ')[0]);
+      totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${formatNumber(value)}`));
       systemForm.querySelector(".totals").appendChild(totalNode);
-      console.log(`Adding ${totalNode}`);
     }
+
+
+    const nonAllianceNode: HTMLElement = systemForm.querySelector(".nonAllianceContracts");
+    if (data.nonAllianceContracts > 0)
+    {
+
+      nonAllianceNode.querySelector(".nonAllianceNumber").textContent = String(data.nonAllianceContracts);
+
+      for (const issuerName of data.nonAllianceName)
+      {
+        var nameNode: HTMLElement = document.createElement("li");
+        nameNode.appendChild(document.createTextNode(`${issuerName}`));
+        nonAllianceNode.querySelector(".nameList").appendChild(nameNode);
+      }
+
+      enableNode(nonAllianceNode);
+    }
+    else
+    {
+      disableNode(nonAllianceNode);
+    }
+
 
     disableNode(systemForm.querySelector(".loading-text"));
     enableNode(systemForm.querySelector(".contract-data"));
   }
 
-  request.send()
+  request.send();
 }
 
 function removeAllChildNodes(node: HTMLElement)
@@ -211,10 +239,19 @@ function parseData(htmlResponse): ParsedResults
     console.log(contract);
 
     var success: boolean = false;
-    for (const item in filteredItems)
+    
+
+    // Filter out non-alliance contracts
+    if (contract.alliance_id !== GOON_ALLIANCE_ID)
+    {
+      ++result.nonAllianceContracts;
+      result.nonAllianceName.add(contract.issuer_name);
+      continue;
+    }
+
+    for (const item of filteredItems.keys())
     {
       success ||= countItem(+item, contract, result);
-      console.log(result);
     }
 
     if (success)

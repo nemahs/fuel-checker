@@ -49,7 +49,7 @@ def _makeCall(endpoint: str, access_token: str = None, version: str = "latest", 
 
         response = requests.get(f"{BASE_URL}{endpoint}", headers=HEADERS, params=params)
     else:
-        response = requests.post(f"{BASE_URL}{endpoint}", headers=HEADERS, data=data)
+        response = requests.post(f"{BASE_URL}{endpoint}", headers=HEADERS, json=data)
 
     if response.status_code == requests.codes['ok']:
         return response.json()
@@ -131,9 +131,7 @@ def getIDs(names : List[str]):
     if not names:
         return list()
 
-    data = {'names': names}
-
-    return _makeCall("universe/ids/", method=METHOD.POST, data=data)
+    return _makeCall("universe/ids/", method=METHOD.POST, data=names)
 
 
 def getNames(ids : List[int]):
@@ -145,9 +143,7 @@ def getNames(ids : List[int]):
     if not ids:
         return list()
 
-    data = {'ids': ids}
-
-    return _makeCall("universe/names/", method=METHOD.POST, data=data)
+    return _makeCall("universe/names/", method=METHOD.POST, data=ids)
 
 
 def validateUser(accessKey: str):
@@ -259,3 +255,8 @@ def getStructureInfo(structure_id: int, auth_token: str):
     @param auth_token       Character auth token.
     """
     return _makeCall(f"universe/structures/{structure_id}", auth_token)
+
+
+def getCorporationInfo(corp_id: int):
+
+    return _makeCall(f"corporations/{corp_id}")

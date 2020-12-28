@@ -161,9 +161,14 @@ def getSystemContracts(name: str):
   structures = {system: ESI.getStructureInfo(system, authToken)['solar_system_id'] for system in systems}
   systemContracts = [contract for contract in result if structures[contract['start_location_id']] == systemList[name]]
 
+  characterNames = ESI.getNames([contract['issuer_id'] for contract in systemContracts])
+  print(characterNames)
+
   for contract in systemContracts:
     details = ESI.getContractDetails(contract['contract_id'], authToken, GOON_CORP_ID)
     contract['details'] = details
+    contract['issuer_name'] = next((name['name'] for name in characterNames if name['id'] == contract['issuer_id']))
+    contract['alliance_id'] = ESI.getCorporationInfo(contract['issuer_corporation_id'])['alliance_id']
 
   return jsonify(systemContracts)
 
