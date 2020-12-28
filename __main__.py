@@ -140,36 +140,24 @@ def removeSystem(name: str) -> Response:
 
 @app.route("/contracts")
 @esi_required
-def getContracts():
+def getContracts() -> Response:
   """Retrieve the list of corp contracts."""
   result = ESI.getCorpContracts(GOON_CORP_ID, authToken)
   result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID and contract['status'] == 'outstanding']
   print(result)
   return jsonify(result)
 
-@app.route("/test/<int:id>")
-@login_required
-def testFunction(id):
-  return jsonify(ESI.getStructureInfo(id, current_user.getAccessKey(CLIENT_ID, SECRET_KEY)))
 
 @app.route("/contracts/<string:name>")
 @esi_required
-def getSystemContracts(name: str):
+def getSystemContracts(name: str) -> Response:
   result = ESI.getCorpContracts(GOON_CORP_ID, authToken)
   result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID and contract['status'] == 'outstanding' and contract['type'] == 'item_exchange']
   systems = {contract['start_location_id'] for contract in result}
   structures = {system: ESI.getStructureInfo(system, authToken)['solar_system_id'] for system in systems}
   systemContracts = [contract for contract in result if structures[contract['start_location_id']] == systemList[name]]
 
-  characterNames = ESI.getNames([contract['issuer_id'] for contract in systemContracts])
-  print(characterNames)
-
-  for contract in systemContracts:
-    details = ESI.getContractDetails(contract['contract_id'], authToken, GOON_CORP_ID)
-    contract['details'] = details
-    contract['issuer_name'] = next((name['name'] for name in characterNames if name['id'] == contract['issuer_id']))
-    contract['alliance_id'] = ESI.getCorporationInfo(contract['issuer_corporation_id'])['alliance_id']
-
+  populateDetails(systemContracts)
   return jsonify(systemContracts)
 
 @app.route("/logout")
@@ -187,6 +175,16 @@ def shutdown_session(exception: Optional[Exception] = None):
   @param exception  Exception that caused the app to shutdown. Optional.
   """
   db_session.remove()
+
+
+def populateDetails(contractList):
+  characterNames = ESI.getNames([contract['issuer_id'] for contract in contractList])
+
+  for contract in contractList:
+    details = ESI.getContractDetails(contract['contract_id'], authToken, GOON_CORP_ID)
+    contract['details'] = details
+    contract['issuer_name'] = next((name['name'] for name in characterNames if name['id'] == contract['issuer_id']))
+    contract['alliance_id'] = ESI.getCorporationInfo(contract['issuer_corporation_id'])['alliance_id']
 
 init_db()
 app.run(debug = True)

@@ -1,7 +1,7 @@
 """Provides an framework for making calls to EVE's ESI API."""
 import requests
 import json
-from typing import List, Callable
+from typing import List, Callable, Any
 from enum import Enum
 from functools import reduce
 from base64 import urlsafe_b64encode
@@ -192,7 +192,7 @@ def getCorpContracts(corp_id: int, auth_token: str):
     @param auth_token   Character auth token.
     @return             List of corp contracts.
     """
-    result = []
+    result: List[Any] = []
     page: int = 1
 
     while True:
@@ -258,5 +258,9 @@ def getStructureInfo(structure_id: int, auth_token: str):
 
 
 def getCorporationInfo(corp_id: int):
+    """Get info on a given corporation.
 
+    @param corp_id  ID of the corporation requested.
+    @return         JSON response of corporation details.
+    """
     return _makeCall(f"corporations/{corp_id}")

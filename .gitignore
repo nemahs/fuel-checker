@@ -4,3 +4,4 @@ venv/
 .vscode/
 static/css/*
 static/js/*
+*.pyc
