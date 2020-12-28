@@ -115,6 +115,9 @@ def getIDs(names : List[str], auth_code):
     BASE_URL: str = f"https://esi.evetech.net/latest/"
     HEADERS = {'accept': 'application/json' }
 
+    if not names:
+        return list()
+
     data = {'names': names}
     print(data)
 
@@ -122,6 +125,18 @@ def getIDs(names : List[str], auth_code):
     print(response)
     return response.json()
 
+
+def getNames(ids : List[int]):
+    BASE_URL: str = "https://esi.evetech.net/latest/"
+    HEADERS = {'accept': 'application/json'}
+
+    if not ids:
+        return list()
+
+    data = {'ids': ids}
+
+    response = requests.post(BASE_URL + "universe/names/", headers=HEADERS, data=data)
+    return response.json()
 
 def validateUser(accessKey: str):
     """Validate an access key and get information about the user.
@@ -231,5 +246,4 @@ def getStructureInfo(structure_id: int, auth_token: str):
     @param structure_id     Structure to get info on.
     @param auth_token       Character auth token.
     """
-
     return _makeCall(f"universe/structures/{structure_id}", auth_token)
