@@ -18,7 +18,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 app.wsgi_app = SassMiddleware(app.wsgi_app, {
-  __package__: ('static/sass', 'static/css', '/static/css/')
+  __package__: {
+    'sass_path': 'static/sass',
+    'css_path': 'static/css',
+    'wsgi_path': '/static/css',
+    'strip_extension': True
+  }
 })
 
 CLIENT_ID: str = "e7f7b4cce62046bc93fdd765955f4cb0"
