@@ -4,6 +4,7 @@
   <head>
     <title>Refuelling Checker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="{{url_for('static', filename='css/home.css')}}" rel=stylesheet type="text/css">
     {% if current_user.is_authenticated %}
       <script type="text/javascript">var userSystems = JSON.parse('{{ current_user.systemList|tojson }}');</script>
@@ -14,7 +15,7 @@
   <body>
     <div id="login-header">
       {% if current_user.is_authenticated %}
-        Logged in as: {{ current_user.characterName }} <a href={{ url_for('logout') }}>Log out</a><br/>
+        Logged in as: {{ current_user.characterName }} <a id="logout-btn" href={{ url_for('logout') }}>Log out</a><br/>
         Time to refresh: <span id="timerValue"></span>
       {% else %}
         <a href={{loginURL}}>
