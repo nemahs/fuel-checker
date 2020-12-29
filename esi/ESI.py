@@ -68,7 +68,7 @@ def _makePagedCall(endpoint: str, access_token: str = None, version: str = "late
 
     if response:
         result = response.json()
-        for page in range(2, int(response.headers['X-Pages'])):
+        for page in range(2, int(response.headers['X-Pages']) + 1):
             result += _makeCall(endpoint, access_token, version, page)
 
     return result

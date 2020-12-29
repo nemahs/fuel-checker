@@ -144,7 +144,6 @@ def getContracts() -> Response:
   """Retrieve the list of corp contracts."""
   result = ESI.getCorpContracts(GOON_CORP_ID, authToken)
   result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID and contract['status'] == 'outstanding']
-  print(result)
   return jsonify(result)
 
 
