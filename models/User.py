@@ -5,10 +5,11 @@ from sqlalchemy.ext.mutable import MutableList
 from datetime import datetime, timedelta
 from typing import List, Optional
 from functools import reduce
-from .. import database
-from ..esi import ESI
+from .. import database, esi
 
 class StringList(types.TypeDecorator):
+  """Custom SQLAlchemy type for a comma separated list of strings."""
+
   impl = types.String
 
   def process_bind_param(self, value: Optional[List[str]], dialect):
@@ -25,12 +26,12 @@ class User(database.Base):
   """User object."""
 
   __tablename__:str = "Users"
-  id = Column(Integer, primary_key=True)
-  characterName  = Column(String(50), unique = True, nullable = False)
-  accessKey      = Column(String(50))
-  refreshToken   = Column(String(50))
-  expiryTime     = Column(DateTime)
-  systemList     = Column(MutableStringList, nullable = True)
+  id              = Column(Integer, primary_key=True)
+  characterName   = Column(String(50), unique = True, nullable = False)
+  accessKey       = Column(String(50))
+  refreshToken    = Column(String(50))
+  expiryTime      = Column(DateTime)
+  systemList      = Column(MutableStringList, nullable = True)
 
   def __init__(self, id: int, charName: str, refreshToken: str, expiryTime: datetime = None, accessKey: str = None):
     """Construct new user.
@@ -58,6 +59,10 @@ class User(database.Base):
 
   @staticmethod
   def parseTokens(tokens):
+    """Parse a token response from ESI.
+
+    @return Tuple containing (access_token, refresh_token, expirationTime)
+    """
     return tokens['access_token'], tokens['refresh_token'], datetime.utcnow() + timedelta(0, tokens['expires_in'])
 
 
@@ -69,7 +74,7 @@ class User(database.Base):
     @return             Active application key.
     """
     if datetime.utcnow() > self.expiryTime:
-      result = ESI.refreshToken(self.refreshToken, client_id, secret_key)
+      result = esi.refreshToken(self.refreshToken, client_id, secret_key)
       self.accessKey, self.refreshToken, self.expiryTime = User.parseTokens(result)
       database.db_session.add(self)
       database.db_session.commit()

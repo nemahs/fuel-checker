@@ -4,12 +4,12 @@ from flask_login import LoginManager, login_user, current_user, logout_user, log
 from sqlalchemy.orm import Session
 from sassutils.wsgi import SassMiddleware
 
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, timedelta
 from importlib.resources import open_text, path
 from functools import wraps
 
-from .esi import ESI
+from . import esi
 from .database import db_session, init_db, engine
 from .models.User import User
 
@@ -67,18 +67,18 @@ def esi_required(function):
 
 @app.route("/")
 def homepage():
-  SCOPES = [
-    ESI.ESI_SCOPES.READ_CORP_CONTRACTS,
-    ESI.ESI_SCOPES.READ_CONTRACTS,
-    ESI.ESI_SCOPES.CHECK_ONLINE,
-    ESI.ESI_SCOPES.READ_STRUCTURES,
-    ESI.ESI_SCOPES.OPEN_WINDOWS
+  SCOPES: List[esi.ESI_SCOPES] = [
+    esi.ESI_SCOPES.READ_CORP_CONTRACTS,
+    esi.ESI_SCOPES.READ_CONTRACTS,
+    esi.ESI_SCOPES.CHECK_ONLINE,
+    esi.ESI_SCOPES.READ_STRUCTURES,
+    esi.ESI_SCOPES.OPEN_WINDOWS
   ]
 
   if current_user.is_authenticated:
     print(current_user.systemList)
   return render_template("index.html", 
-    loginURL=ESI.getLoginURL(CLIENT_ID, "http://localhost:5000/login", SCOPES),
+    loginURL=esi.getLoginURL(CLIENT_ID, "http://localhost:5000/login", SCOPES),
     systemList=systemList.keys()
   )
 
@@ -86,11 +86,11 @@ def homepage():
 def login():
   code = request.args.get("code")
 
-  tokens = ESI.authenticateUser(code, SECRET_KEY, CLIENT_ID)
+  tokens = esi.authenticateUser(code, SECRET_KEY, CLIENT_ID)
   access_token, refresh_token, expiry_time = User.parseTokens(tokens)
 
 
-  userInfo = ESI.validateUser(access_token)
+  userInfo = esi.validateUser(access_token)
   characterName: str = userInfo['CharacterName']
 
   user: Optional[User] = User.query.filter(User.characterName == characterName).first()
@@ -142,7 +142,7 @@ def removeSystem(name: str) -> Response:
 @esi_required
 def getContracts() -> Response:
   """Retrieve the list of corp contracts."""
-  result = ESI.getCorpContracts(GOON_CORP_ID, authToken)
+  result = esi.getCorpContracts(GOON_CORP_ID, authToken)
   result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID and contract['status'] == 'outstanding']
   return jsonify(result)
 
@@ -150,10 +150,10 @@ def getContracts() -> Response:
 @app.route("/contracts/<string:name>")
 @esi_required
 def getSystemContracts(name: str) -> Response:
-  result = ESI.getCorpContracts(GOON_CORP_ID, authToken)
+  result = esi.getCorpContracts(GOON_CORP_ID, authToken)
   result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID and contract['status'] == 'outstanding' and contract['type'] == 'item_exchange']
   systems = {contract['start_location_id'] for contract in result}
-  structures = {system: ESI.getStructureInfo(system, authToken)['solar_system_id'] for system in systems}
+  structures = {system: esi.getStructureInfo(system, authToken)['solar_system_id'] for system in systems}
   systemContracts = [contract for contract in result if structures[contract['start_location_id']] == systemList[name]]
 
   populateDetails(systemContracts)
@@ -177,13 +177,13 @@ def shutdown_session(exception: Optional[Exception] = None):
 
 
 def populateDetails(contractList):
-  characterNames = ESI.getNames([contract['issuer_id'] for contract in contractList])
+  characterNames = esi.getNames([contract['issuer_id'] for contract in contractList])
 
   for contract in contractList:
-    details = ESI.getContractDetails(contract['contract_id'], authToken, GOON_CORP_ID)
+    details = esi.getContractDetails(contract['contract_id'], authToken, GOON_CORP_ID)
     contract['details'] = details
     contract['issuer_name'] = next((name['name'] for name in characterNames if name['id'] == contract['issuer_id']))
-    contract['alliance_id'] = ESI.getCorporationInfo(contract['issuer_corporation_id'])['alliance_id']
+    contract['alliance_id'] = esi.getCorporationInfo(contract['issuer_corporation_id'])['alliance_id']
 
 init_db()
 app.run(debug = True)
