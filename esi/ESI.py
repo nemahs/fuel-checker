@@ -57,6 +57,22 @@ def _makeCall(endpoint: str, access_token: str = None, version: str = "latest", 
     raise Exception("Failed to contact ESI: " +  response.text + f"\nURL: {BASE_URL}{endpoint}")
 
 
+def _makePagedCall(endpoint: str, access_token: str = None, version: str = "latest"):
+    BASE_URL: str = f"https://esi.evetech.net/{version}/"
+    HEADERS = {'accept': 'application/json' }
+
+    if access_token is not None:
+        HEADERS["Authorization"] = f"Bearer {access_token}"
+
+    response = requests.get(f"{BASE_URL}{endpoint}", headers=HEADERS)
+
+    if response:
+        result = response.json()
+        for page in range(2, int(response.headers['X-Pages'])):
+            result += _makeCall(endpoint, access_token, version, page)
+
+    return result
+
 def getLoginURL(app_id, redirect_url, scopes: List[ESI_SCOPES]) -> str:
     """Get the login URL to redirect users to.
 
@@ -192,21 +208,7 @@ def getCorpContracts(corp_id: int, auth_token: str):
     @param auth_token   Character auth token.
     @return             List of corp contracts.
     """
-    result: List[Any] = []
-    page: int = 1
-
-    while True:
-        try:
-            response =  _makeCall(f"corporations/{corp_id}/contracts/", auth_token, page = page)
-        except Exception:
-            break
-        if not response:
-            break
-
-        result = result + response
-        page = page + 1
-
-    return result
+    return _makePagedCall(f"corporations/{corp_id}/contracts/", auth_token)
 
 
 def getContracts(character_id: int, auth_token: str):
