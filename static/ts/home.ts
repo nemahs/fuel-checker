@@ -124,28 +124,42 @@ async function loadData(system: string): Promise<number>
 
   const systemForm = getSystemNode(system);
 
-  const response = await fetch("/contracts/" + system);
+  const response = await fetch(`/contracts/${system}`);
   const responseData = await response.json();
 
   const data = parseData(responseData);
   systemForm.querySelector(".contract-number").textContent = String(data.contracts);
 
-  Utils.removeAllChildNodes(systemForm.querySelector('.totals'));
+  populateTotals(systemForm, data);
+  populateNonAllianceContracts(systemForm, data);
+
+  disableNode(systemForm.querySelector(".loading-text"));
+  enableNode(systemForm.querySelector(".contract-data"));
+  return data.contracts;
+}
+
+function populateTotals(systemForm: HTMLElement, data: ParsedResults)
+{
+  const totalsRoot: HTMLElement = systemForm.querySelector(".totals");
+
+  Utils.removeAllChildNodes(totalsRoot);
   for (const [key, value] of data.totals)
   {
     var totalNode = document.createElement('li');
     totalNode.classList.add(filteredItems.get(key).split(' ')[0]);
     totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${Utils.formatNumber(value)}`));
-    systemForm.querySelector(".totals").appendChild(totalNode);
+    totalsRoot.appendChild(totalNode);
   }
+}
 
 
+function populateNonAllianceContracts(systemForm: HTMLElement, data: ParsedResults)
+{
   const nonAllianceNode: HTMLElement = systemForm.querySelector(".nonAllianceContracts");
+
   if (data.nonAllianceContracts > 0)
   {
-
     nonAllianceNode.querySelector(".nonAllianceNumber").textContent = String(data.nonAllianceContracts);
-
     for (const issuerName of data.nonAllianceName)
     {
       var nameNode: HTMLElement = document.createElement("li");
@@ -159,14 +173,7 @@ async function loadData(system: string): Promise<number>
   {
     disableNode(nonAllianceNode);
   }
-
-
-  disableNode(systemForm.querySelector(".loading-text"));
-  enableNode(systemForm.querySelector(".contract-data"));
-
-  return data.contracts;
 }
-
 
 function countItem(itemID: number, data: ContractData, result: ParsedResults): boolean
 {
