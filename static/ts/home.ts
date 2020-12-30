@@ -36,6 +36,7 @@ const filteredItems: Map<number, string> = new Map(
 
 
 const GOON_ALLIANCE_ID: number = 1354830081;
+const ORIGINAL_TITLE: string = document.title;
 
 function disableNode(node: HTMLElement) { node.style.display = "none"; }
 function enableNode(node: HTMLElement)  { node.style.display = "initial"; }
@@ -43,9 +44,7 @@ function enableNode(node: HTMLElement)  { node.style.display = "initial"; }
 function getSystemNode(systemName: string): HTMLElement
 {
   const systemList: HTMLElement = document.querySelector("#system-list");
-  const retVal: HTMLElement = systemList.querySelector("#system-" + systemName);
-
-  return retVal;
+  return systemList.querySelector("#system-" + systemName);
 }
 
 
@@ -58,74 +57,34 @@ function createSystemInfo(systemName: string): HTMLElement
   if (getSystemNode(systemName) !== null || systemName === "")
   {
     console.warn("Current node already exists");
-    // TODO: Should update the current item in the list probably.
     return;
   }
 
+  // Create new list entry and add to the list.
   const newTemplate: HTMLElement = systemTemplate.cloneNode(true) as HTMLElement;
-  newTemplate.id = "system-" + systemName;
+  newTemplate.id = `system-${systemName}`;
   newTemplate.classList.add("system-list");
   newTemplate.querySelector(".system-title").textContent = systemName;
   enableNode(newTemplate);
   systemList.appendChild(newTemplate);
-
   newTemplate.querySelector(".remove-system").addEventListener("click", function() { removeSystem(systemName); })
 
-  try {
-    if (userSystems.includes(systemName))
-    {
-      return;
-    }
+  if (!userSystems.includes(systemName))
+  {
+    fetch(`/systems/add/${systemName}`).then(
+      function () { loadData(systemName) }
+    ).catch(
+      function() { console.error("Bad response from server.") });
   }
-  catch(err) {}
-
-
-  let request = new XMLHttpRequest();
-  request.open("GET", "/systems/add/" + systemName);
-  request.onload = function() { 
-    loadData(systemName);
-  };
-  request.onerror = function (e) {
-    console.log("Bad response from server");
-  }
-  request.send();
 }
 
 function removeSystem(systemName: string)
 {
-  let request = new XMLHttpRequest();
-  request.open("GET", "/systems/remove/" + systemName);
-  request.onload = function() {
+  fetch(`/systems/remove/${systemName}`).then(function () {
     getSystemNode(systemName).remove();
-  }
-
-  request.send();
+  });
 }
 
-function formatTime(time: number): string
-{
-  const minutes: number = Math.floor(time / 60);
-  const seconds: number = time % 60;
-
-  let output: string = `${seconds}s`;
-
-  if (minutes > 0)
-  {
-    output = `${minutes}m ` + output;
-  }
-  
-  return output;
-}
-
-function formatNumber(number: number): string
-{
-  if (number > 1000000)
-  {
-    return (number / 1000000).toFixed(2) + "M";
-  }
-
-  return Math.floor(number / 1000) + "," + String(number % 1000).padStart(3, '0');
-}
 
 function populateList()
 {
@@ -135,17 +94,27 @@ function populateList()
     return;
   }
 
-  for (let system of userSystems)
-  {
-    if (system !== "")
+  let filteredSystems = userSystems.filter(system => system != "");
+
+  filteredSystems.forEach(createSystemInfo);
+
+  Promise.all(filteredSystems.map(system => loadData(system))).then((values) => {
+    const totalContracts: number = values.reduce((acc, x) => acc + x, 0);
+
+    if (totalContracts > 0)
     {
-      createSystemInfo(system);
-      loadData(system);
+      console.log(`${totalContracts} available to fill, setting title.`);
+      document.title = `(${totalContracts}) ${ORIGINAL_TITLE}`;
     }
-  }
+    else
+    {
+      console.log("No contracts at the moment, setting normal title.");
+      document.title = ORIGINAL_TITLE;
+    }
+  });
 }
 
-function loadData(system: string)
+async function loadData(system: string): Promise<number>
 {
   if (system === "")
   {
@@ -155,59 +124,49 @@ function loadData(system: string)
 
   const systemForm = getSystemNode(system);
 
-  var request = new XMLHttpRequest();
-  request.open("GET", "/contracts/" + system)
-  request.responseType = "json";
-  request.onload = function() {
-    console.log(request.response)
-    const data = parseData(request.response);
-    systemForm.querySelector(".contract-number").textContent = String(data.contracts);
+  const response = await fetch("/contracts/" + system);
+  const responseData = await response.json();
 
-    removeAllChildNodes(systemForm.querySelector('.totals'));
-    for (const [key, value] of data.totals)
-    {
-      var totalNode = document.createElement('li');
-      totalNode.classList.add(filteredItems.get(key).split(' ')[0]);
-      totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${formatNumber(value)}`));
-      systemForm.querySelector(".totals").appendChild(totalNode);
-    }
+  const data = parseData(responseData);
+  systemForm.querySelector(".contract-number").textContent = String(data.contracts);
 
-
-    const nonAllianceNode: HTMLElement = systemForm.querySelector(".nonAllianceContracts");
-    if (data.nonAllianceContracts > 0)
-    {
-
-      nonAllianceNode.querySelector(".nonAllianceNumber").textContent = String(data.nonAllianceContracts);
-
-      for (const issuerName of data.nonAllianceName)
-      {
-        var nameNode: HTMLElement = document.createElement("li");
-        nameNode.appendChild(document.createTextNode(`${issuerName}`));
-        nonAllianceNode.querySelector(".nameList").appendChild(nameNode);
-      }
-
-      enableNode(nonAllianceNode);
-    }
-    else
-    {
-      disableNode(nonAllianceNode);
-    }
-
-
-    disableNode(systemForm.querySelector(".loading-text"));
-    enableNode(systemForm.querySelector(".contract-data"));
-  }
-
-  request.send();
-}
-
-function removeAllChildNodes(node: HTMLElement)
-{
-  while (node.firstChild)
+  Utils.removeAllChildNodes(systemForm.querySelector('.totals'));
+  for (const [key, value] of data.totals)
   {
-    node.removeChild(node.firstChild);
+    var totalNode = document.createElement('li');
+    totalNode.classList.add(filteredItems.get(key).split(' ')[0]);
+    totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${Utils.formatNumber(value)}`));
+    systemForm.querySelector(".totals").appendChild(totalNode);
   }
+
+
+  const nonAllianceNode: HTMLElement = systemForm.querySelector(".nonAllianceContracts");
+  if (data.nonAllianceContracts > 0)
+  {
+
+    nonAllianceNode.querySelector(".nonAllianceNumber").textContent = String(data.nonAllianceContracts);
+
+    for (const issuerName of data.nonAllianceName)
+    {
+      var nameNode: HTMLElement = document.createElement("li");
+      nameNode.appendChild(document.createTextNode(`${issuerName}`));
+      nonAllianceNode.querySelector(".nameList").appendChild(nameNode);
+    }
+
+    enableNode(nonAllianceNode);
+  }
+  else
+  {
+    disableNode(nonAllianceNode);
+  }
+
+
+  disableNode(systemForm.querySelector(".loading-text"));
+  enableNode(systemForm.querySelector(".contract-data"));
+
+  return data.contracts;
 }
+
 
 function countItem(itemID: number, data: ContractData, result: ParsedResults): boolean
 {
@@ -272,15 +231,11 @@ function timerFunc(): void
 
   if (timeToRefresh <= 0)
   {
-    for (let system of userSystems)
-    {
-      loadData(system);
-    }
-
+    populateList();
     timeToRefresh = REFRESH_INTERVAL_SECONDS;
   }
 
-  timerDisplay.textContent = formatTime(timeToRefresh);
+  timerDisplay.textContent = Utils.formatTime(timeToRefresh);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -299,3 +254,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.setInterval(timerFunc, 1000);
 });
+
+namespace Utils {
+
+  export function removeAllChildNodes(node: HTMLElement)
+  {
+    while (node.firstChild)
+    {
+      node.removeChild(node.firstChild);
+    }
+  }
+
+  export function formatTime(time: number): string
+  {
+    const minutes: number = Math.floor(time / 60);
+    const seconds: number = time % 60;
+
+    let output: string = `${seconds}s`;
+
+    if (minutes > 0)
+    {
+      output = `${minutes}m ` + output;
+    }
+    
+    return output;
+  }
+
+  export function formatNumber(number: number): string
+  {
+    if (number > 1000000)
+    {
+      return (number / 1000000).toFixed(2) + "M";
+    }
+
+    return Math.floor(number / 1000) + "," + String(number % 1000).padStart(3, '0');
+  }
+}
