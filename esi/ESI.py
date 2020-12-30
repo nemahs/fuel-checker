@@ -1,7 +1,7 @@
 """Provides an framework for making calls to EVE's ESI API."""
 from typing import List, Callable, Any
 from functools import reduce
-from .CommonFunctions import _makeCall, _makeCallAsync, _makePagedCall, METHOD
+from .CommonFunctions import _makeCall, _makePagedCall, METHOD
 
 def getIDs(names : List[str]):
     """Get IDs from a set of names.

@@ -1,6 +1,9 @@
 """Common ESI functions for making calls to ESI."""
+from gevent import monkey
+monkey.patch_all()
+
 from enum import Enum
-import asyncio
+import grequests
 import requests
 
 
@@ -47,11 +50,6 @@ def _makeCall(endpoint: str, access_token: str = None, version: str = "latest", 
   raise Exception("Failed to contact ESI: " +  response.text + f"\nURL: {url}")
 
 
-async def _makeCallAsync(endpoint: str, access_token: str = None, version: str = "latest", page: int = None):
-  """Async version of _makeCall."""
-  return _makeCall(endpoint, access_token, version, page)
-
-
 def _makePagedCall(endpoint: str, access_token: str = None, version: str = "latest"):
   """Make a call to a paged endpoint. Retrieves all pages.
 
@@ -65,18 +63,19 @@ def _makePagedCall(endpoint: str, access_token: str = None, version: str = "late
   if access_token is not None:
     headers["Authorization"] = f"Bearer {access_token}"
 
-  response = requests.get(f"{BASE_URL}/{version}/{endpoint}", headers=headers)
+
+  endpointURL: str = f"{BASE_URL}/{version}/{endpoint}"
+  response = requests.get(endpointURL, headers=headers)
 
   if response:
     result = response.json()
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    tasks = [_makeCallAsync(endpoint, access_token, version, page) for page in range(2, int(response.headers['X-Pages']) + 1)]
+    tasks = [grequests.get(endpointURL, headers=headers, params={'page': page}) for page in range(2, int(response.headers['X-Pages']) + 1)]
 
-    pagedResults = loop.run_until_complete(asyncio.gather(*tasks))
+    responses = grequests.map(tasks)
 
-    for page in pagedResults:
-      result += page
+
+    for response in responses:
+      result.extend(response.json())
 
     return result
   else:
