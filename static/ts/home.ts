@@ -289,6 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   addSystemForm.addEventListener('submit', (event) => {
     createSystemInfo(event.target[0].value);
+    addSystemForm.querySelector("input").value = "";
     event.stopImmediatePropagation();
     event.preventDefault();
   });
