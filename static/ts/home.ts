@@ -36,6 +36,7 @@ const filteredItems: Map<number, string> = new Map(
 
 
 const GOON_ALLIANCE_ID: number = 1354830081;
+const ORIGINAL_TITLE: string = document.title;
 
 function disableNode(node: HTMLElement) { node.style.display = "none"; }
 function enableNode(node: HTMLElement)  { node.style.display = "initial"; }
@@ -135,17 +136,25 @@ function populateList()
     return;
   }
 
-  for (let system of userSystems)
-  {
-    if (system !== "")
+  let filteredSystems = userSystems.filter(x => x != "");
+
+  filteredSystems.forEach(createSystemInfo);
+
+  Promise.all(filteredSystems.map(system => loadData(system))).then((values) => {
+    const totalContracts: number = values.reduce((acc, x) => acc + x, 0);
+
+    if (totalContracts > 0)
     {
-      createSystemInfo(system);
-      loadData(system);
+      document.title = `(${totalContracts}) ${ORIGINAL_TITLE}`;
     }
-  }
+    else
+    {
+      document.title = ORIGINAL_TITLE;
+    }
+  });
 }
 
-function loadData(system: string)
+async function loadData(system: string): Promise<number>
 {
   if (system === "")
   {
@@ -155,50 +164,46 @@ function loadData(system: string)
 
   const systemForm = getSystemNode(system);
 
-  var request = new XMLHttpRequest();
-  request.open("GET", "/contracts/" + system)
-  request.responseType = "json";
-  request.onload = function() {
-    console.log(request.response)
-    const data = parseData(request.response);
-    systemForm.querySelector(".contract-number").textContent = String(data.contracts);
+  const response = await fetch("/contracts/" + system);
 
-    removeAllChildNodes(systemForm.querySelector('.totals'));
-    for (const [key, value] of data.totals)
-    {
-      var totalNode = document.createElement('li');
-      totalNode.classList.add(filteredItems.get(key).split(' ')[0]);
-      totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${formatNumber(value)}`));
-      systemForm.querySelector(".totals").appendChild(totalNode);
-    }
+  const data = parseData(response.json());
+  systemForm.querySelector(".contract-number").textContent = String(data.contracts);
 
-
-    const nonAllianceNode: HTMLElement = systemForm.querySelector(".nonAllianceContracts");
-    if (data.nonAllianceContracts > 0)
-    {
-
-      nonAllianceNode.querySelector(".nonAllianceNumber").textContent = String(data.nonAllianceContracts);
-
-      for (const issuerName of data.nonAllianceName)
-      {
-        var nameNode: HTMLElement = document.createElement("li");
-        nameNode.appendChild(document.createTextNode(`${issuerName}`));
-        nonAllianceNode.querySelector(".nameList").appendChild(nameNode);
-      }
-
-      enableNode(nonAllianceNode);
-    }
-    else
-    {
-      disableNode(nonAllianceNode);
-    }
-
-
-    disableNode(systemForm.querySelector(".loading-text"));
-    enableNode(systemForm.querySelector(".contract-data"));
+  removeAllChildNodes(systemForm.querySelector('.totals'));
+  for (const [key, value] of data.totals)
+  {
+    var totalNode = document.createElement('li');
+    totalNode.classList.add(filteredItems.get(key).split(' ')[0]);
+    totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${formatNumber(value)}`));
+    systemForm.querySelector(".totals").appendChild(totalNode);
   }
 
-  request.send();
+
+  const nonAllianceNode: HTMLElement = systemForm.querySelector(".nonAllianceContracts");
+  if (data.nonAllianceContracts > 0)
+  {
+
+    nonAllianceNode.querySelector(".nonAllianceNumber").textContent = String(data.nonAllianceContracts);
+
+    for (const issuerName of data.nonAllianceName)
+    {
+      var nameNode: HTMLElement = document.createElement("li");
+      nameNode.appendChild(document.createTextNode(`${issuerName}`));
+      nonAllianceNode.querySelector(".nameList").appendChild(nameNode);
+    }
+
+    enableNode(nonAllianceNode);
+  }
+  else
+  {
+    disableNode(nonAllianceNode);
+  }
+
+
+  disableNode(systemForm.querySelector(".loading-text"));
+  enableNode(systemForm.querySelector(".contract-data"));
+
+  return data.contracts;
 }
 
 function removeAllChildNodes(node: HTMLElement)
