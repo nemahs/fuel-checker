@@ -136,7 +136,7 @@ function populateList()
     return;
   }
 
-  let filteredSystems = userSystems.filter(x => x != "");
+  let filteredSystems = userSystems.filter(system => system != "");
 
   filteredSystems.forEach(createSystemInfo);
 
@@ -145,10 +145,12 @@ function populateList()
 
     if (totalContracts > 0)
     {
+      console.log(`${totalContracts} available to fill, setting title.`);
       document.title = `(${totalContracts}) ${ORIGINAL_TITLE}`;
     }
     else
     {
+      console.log("No contracts at the moment, setting normal title.");
       document.title = ORIGINAL_TITLE;
     }
   });
@@ -165,8 +167,9 @@ async function loadData(system: string): Promise<number>
   const systemForm = getSystemNode(system);
 
   const response = await fetch("/contracts/" + system);
+  const responseData = await response.json();
 
-  const data = parseData(response.json());
+  const data = parseData(responseData);
   systemForm.querySelector(".contract-number").textContent = String(data.contracts);
 
   removeAllChildNodes(systemForm.querySelector('.totals'));
