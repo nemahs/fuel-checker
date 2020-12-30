@@ -44,9 +44,7 @@ function enableNode(node: HTMLElement)  { node.style.display = "initial"; }
 function getSystemNode(systemName: string): HTMLElement
 {
   const systemList: HTMLElement = document.querySelector("#system-list");
-  const retVal: HTMLElement = systemList.querySelector("#system-" + systemName);
-
-  return retVal;
+  return systemList.querySelector("#system-" + systemName);
 }
 
 
@@ -59,74 +57,34 @@ function createSystemInfo(systemName: string): HTMLElement
   if (getSystemNode(systemName) !== null || systemName === "")
   {
     console.warn("Current node already exists");
-    // TODO: Should update the current item in the list probably.
     return;
   }
 
+  // Create new list entry and add to the list.
   const newTemplate: HTMLElement = systemTemplate.cloneNode(true) as HTMLElement;
-  newTemplate.id = "system-" + systemName;
+  newTemplate.id = `system-${systemName}`;
   newTemplate.classList.add("system-list");
   newTemplate.querySelector(".system-title").textContent = systemName;
   enableNode(newTemplate);
   systemList.appendChild(newTemplate);
-
   newTemplate.querySelector(".remove-system").addEventListener("click", function() { removeSystem(systemName); })
 
-  try {
-    if (userSystems.includes(systemName))
-    {
-      return;
-    }
+  if (!userSystems.includes(systemName))
+  {
+    fetch(`/systems/add/${systemName}`).then(
+      function () { loadData(systemName) }
+    ).catch(
+      function() { console.error("Bad response from server.") });
   }
-  catch(err) {}
-
-
-  let request = new XMLHttpRequest();
-  request.open("GET", "/systems/add/" + systemName);
-  request.onload = function() { 
-    loadData(systemName);
-  };
-  request.onerror = function (e) {
-    console.log("Bad response from server");
-  }
-  request.send();
 }
 
 function removeSystem(systemName: string)
 {
-  let request = new XMLHttpRequest();
-  request.open("GET", "/systems/remove/" + systemName);
-  request.onload = function() {
+  fetch(`/systems/remove/${systemName}`).then(function () {
     getSystemNode(systemName).remove();
-  }
-
-  request.send();
+  });
 }
 
-function formatTime(time: number): string
-{
-  const minutes: number = Math.floor(time / 60);
-  const seconds: number = time % 60;
-
-  let output: string = `${seconds}s`;
-
-  if (minutes > 0)
-  {
-    output = `${minutes}m ` + output;
-  }
-  
-  return output;
-}
-
-function formatNumber(number: number): string
-{
-  if (number > 1000000)
-  {
-    return (number / 1000000).toFixed(2) + "M";
-  }
-
-  return Math.floor(number / 1000) + "," + String(number % 1000).padStart(3, '0');
-}
 
 function populateList()
 {
@@ -172,12 +130,12 @@ async function loadData(system: string): Promise<number>
   const data = parseData(responseData);
   systemForm.querySelector(".contract-number").textContent = String(data.contracts);
 
-  removeAllChildNodes(systemForm.querySelector('.totals'));
+  Utils.removeAllChildNodes(systemForm.querySelector('.totals'));
   for (const [key, value] of data.totals)
   {
     var totalNode = document.createElement('li');
     totalNode.classList.add(filteredItems.get(key).split(' ')[0]);
-    totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${formatNumber(value)}`));
+    totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${Utils.formatNumber(value)}`));
     systemForm.querySelector(".totals").appendChild(totalNode);
   }
 
@@ -209,13 +167,6 @@ async function loadData(system: string): Promise<number>
   return data.contracts;
 }
 
-function removeAllChildNodes(node: HTMLElement)
-{
-  while (node.firstChild)
-  {
-    node.removeChild(node.firstChild);
-  }
-}
 
 function countItem(itemID: number, data: ContractData, result: ParsedResults): boolean
 {
@@ -280,15 +231,11 @@ function timerFunc(): void
 
   if (timeToRefresh <= 0)
   {
-    for (let system of userSystems)
-    {
-      loadData(system);
-    }
-
+    populateList();
     timeToRefresh = REFRESH_INTERVAL_SECONDS;
   }
 
-  timerDisplay.textContent = formatTime(timeToRefresh);
+  timerDisplay.textContent = Utils.formatTime(timeToRefresh);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -307,3 +254,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.setInterval(timerFunc, 1000);
 });
+
+namespace Utils {
+
+  export function removeAllChildNodes(node: HTMLElement)
+  {
+    while (node.firstChild)
+    {
+      node.removeChild(node.firstChild);
+    }
+  }
+
+  export function formatTime(time: number): string
+  {
+    const minutes: number = Math.floor(time / 60);
+    const seconds: number = time % 60;
+
+    let output: string = `${seconds}s`;
+
+    if (minutes > 0)
+    {
+      output = `${minutes}m ` + output;
+    }
+    
+    return output;
+  }
+
+  export function formatNumber(number: number): string
+  {
+    if (number > 1000000)
+    {
+      return (number / 1000000).toFixed(2) + "M";
+    }
+
+    return Math.floor(number / 1000) + "," + String(number % 1000).padStart(3, '0');
+  }
+}
