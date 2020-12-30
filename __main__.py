@@ -115,7 +115,7 @@ def addSystem(name: str) -> Response:
 
   @param name System name to add.
   """
-  if name not in current_user.systemList:
+  if name != "" and name not in current_user.systemList and name in systemList:
     db_session.add(current_user)
     current_user.systemList.append(name)
     db_session.commit()

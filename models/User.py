@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, DateTime
 import sqlalchemy.types as types
 from sqlalchemy.ext.mutable import MutableList
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from functools import reduce
 from .. import database, esi
 
@@ -14,7 +14,8 @@ class StringList(types.TypeDecorator):
 
   def process_bind_param(self, value: Optional[List[str]], dialect):
     """Serialize list to string when saving to db."""
-    return reduce(lambda x,y: x + f",{y}", value, "") if value is not None else None
+    filteredList = [x for x in value if x != ""]
+    return reduce(lambda x,y: x + f",{y}", filteredList, "") if value is not None else None
 
   def process_result_value(self, value: Optional[str], dialect):
     """Deserializes db string to list."""
@@ -58,7 +59,7 @@ class User(database.Base):
 
 
   @staticmethod
-  def parseTokens(tokens):
+  def parseTokens(tokens) -> Tuple[str, str, datetime]:
     """Parse a token response from ESI.
 
     @return Tuple containing (access_token, refresh_token, expirationTime)
