@@ -160,6 +160,7 @@ function populateNonAllianceContracts(systemForm: HTMLElement, data: ParsedResul
   if (data.nonAllianceContracts > 0)
   {
     nonAllianceNode.querySelector(".nonAllianceNumber").textContent = String(data.nonAllianceContracts);
+    Utils.removeAllChildNodes(nonAllianceNode.querySelector(".nameList"));
     for (const issuerName of data.nonAllianceName)
     {
       var nameNode: HTMLElement = document.createElement("li");
@@ -207,14 +208,6 @@ function parseData(htmlResponse): ParsedResults
     var success: boolean = false;
     
 
-    // Filter out non-alliance contracts
-    if (contract.alliance_id !== GOON_ALLIANCE_ID)
-    {
-      ++result.nonAllianceContracts;
-      result.nonAllianceName.add(contract.issuer_name);
-      continue;
-    }
-
     for (const item of filteredItems.keys())
     {
       success ||= countItem(+item, contract, result);
@@ -222,6 +215,13 @@ function parseData(htmlResponse): ParsedResults
 
     if (success)
     {
+      // Filter out non-alliance contracts
+      if (contract.alliance_id !== GOON_ALLIANCE_ID)
+      {
+        ++result.nonAllianceContracts;
+        result.nonAllianceName.add(contract.issuer_name);
+        continue;
+      }
       ++result.contracts;
     }
   }
@@ -229,7 +229,7 @@ function parseData(htmlResponse): ParsedResults
   return result;
 }
 
-const REFRESH_INTERVAL_SECONDS: number = 300;
+const REFRESH_INTERVAL_SECONDS: number = 120;
 var timeToRefresh: number = REFRESH_INTERVAL_SECONDS;
 function timerFunc(): void
 {
@@ -289,7 +289,7 @@ namespace Utils {
 
   export function formatNumber(number: number): string
   {
-    if (number > 1000000)
+    if (number >= 1000000)
     {
       return (number / 1000000).toFixed(2) + "M";
     }

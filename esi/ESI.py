@@ -12,7 +12,7 @@ def getIDs(names : List[str]):
     if not names:
         return list()
 
-    return _makeCall("universe/ids/", method=METHOD.POST, data=names)
+    return _makeCall("universe/ids/", method=METHOD.POST, data=list(set(names)))
 
 
 def getNames(ids : List[int]):
@@ -24,7 +24,7 @@ def getNames(ids : List[int]):
     if not ids:
         return list()
 
-    return _makeCall("universe/names/", method=METHOD.POST, data=ids)
+    return _makeCall("universe/names/", method=METHOD.POST, data=list(set(ids)))
 
 
 def getAdjustedPrices(typeIDs: List[int]) -> List[float]:
