@@ -294,6 +294,11 @@ namespace Utils {
       return (number / 1000000).toFixed(2) + "M";
     }
 
+    if (number < 1000)
+    {
+      return String(number);
+    }
+
     return Math.floor(number / 1000) + "," + String(number % 1000).padStart(3, '0');
   }
 }
