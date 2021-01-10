@@ -31,7 +31,8 @@ const filteredItems: Map<number, string> = new Map(
   [17887, "Oxygen Isotopes"],
   [17889, "Hydrogen Isotopes"],
   [16274, "Helium Isotopes"],
-  [16275, "Stront"]
+  [16275, "Stront"],
+  [41489, "Cap Booster 3200s"],
 ]);
 
 
