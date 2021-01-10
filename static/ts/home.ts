@@ -63,7 +63,6 @@ function createSystemInfo(systemName: string): HTMLElement
   // Create new list entry and add to the list.
   const newTemplate: HTMLElement = systemTemplate.cloneNode(true) as HTMLElement;
   newTemplate.id = `system-${systemName}`;
-  newTemplate.classList.add("system-list");
   newTemplate.querySelector(".system-title").textContent = systemName;
   enableNode(newTemplate);
   systemList.appendChild(newTemplate);
@@ -149,6 +148,7 @@ function populateTotals(systemForm: HTMLElement, data: ParsedResults)
     var totalNode = document.createElement('li');
     totalNode.classList.add(filteredItems.get(key).split(' ')[0]);
     totalNode.classList.add("list-group-item");
+    totalNode.classList.add("bg-secondary");
     totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${Utils.formatNumber(value)}`));
     totalsRoot.appendChild(totalNode);
   }

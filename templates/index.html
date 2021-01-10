@@ -20,43 +20,50 @@
     <link href="{{url_for('static', filename='css/home.css')}}" rel=stylesheet type="text/css">
   </head>
 
-  <body>
-    <div id="login-header">
+  <body class="bg-dark">
+    <div id="login-header" class="navbar navbar-expand-xl navbar-dark bg-dark">
+      <span class="navbar-brand">Fuel Checker</span>
+
       {% if current_user.is_authenticated %}
-        Logged in as: {{ current_user.characterName }} <a id="logout-btn" href={{ url_for('logout') }}>Log out</a><br/>
-        Time to refresh: <span id="timerValue"></span>
-      {% else %}
-        <a href={{loginURL}}>
-          <img src="static/images/eve-sso-login-black-large.png">
-        </a>
+        <form class="d-flex me-3" id="add-system-form">
+          <input type="text" id="systemName" placeholder="Add System" list="systems" />
+          <datalist id="systems">
+            {% for system in systemList %}
+              <option>{{system}}</option>
+            {% endfor %}
+          </datalist>
+          <button type="submit" class="btn btn-secondary" id="add-system">+Add</button>
+        </form>
+
+        <span class="navbar-text me-2">Time to next update: <span id="timerValue"></span></span>
       {% endif %}
+
+      <span class="navbar-text ms-auto me-2">
+        {% if current_user.is_authenticated %}
+          Logged in as: {{ current_user.characterName }} <a class="btn btn-outline-primary ms-2" id="logout-btn" href={{ url_for('logout') }}>Log out</a><br/>
+        {% else %}
+          <a href={{loginURL}}>
+            <img src="static/images/eve-sso-login-black-large.png">
+          </a>
+        {% endif %}
+      </span>
     </div>
     <br />
 
-    <form id="add-system-form">
-      <input type="text" list="systems" />
-      <datalist id="systems">
-        {% for system in systemList %}
-          <option>{{system}}</option>
-        {% endfor %}
-      </datalist>
-      <button type="submit" id="add-system">+ Add System</button>
-    </form>
+
+    <div class="container-fluid">
+      <div class="row row-cols-1 row-cols-md-3 g-4" id="system-list"></div>
+    </div>
   </body>
-
-  <div class="container-fluid">
-    <div class="row row-cols-1 row-cols-md-3 g-4" id="system-list"></div>
-  </div>
-
   <div id="system-template" class="col" style="display: none;">
-    <div class="card">
+    <div class="card text-white bg-secondary system-list">
       <div class="card-header">
         <span class="system-title"></span>
-        <button class="btn btn-danger remove-system">X</button>
+        <button class="btn-close remove-system" aria-label="Remove System"></button>
       </div>
       <div class="card-body">
         <div class="card-text">
-          <div class="loading-text">LOADING...</div>
+          <div class="loading-text"><strong>LOADING...</strong> <div class="spinner-border ms-auto float-end" role="status"></div></div>
           <h5 class="contract-data card-title"><span class="card-title contract-number"></span> contracts<br /></div>
         </div>
         <ul class="contract-data totals list-group list-group-flush"></ul>
