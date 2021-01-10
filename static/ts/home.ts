@@ -134,7 +134,8 @@ async function loadData(system: string): Promise<number>
   populateNonAllianceContracts(systemForm, data);
 
   disableNode(systemForm.querySelector(".loading-text"));
-  enableNode(systemForm.querySelector(".contract-data"));
+  systemForm.querySelectorAll(".contract-data").forEach(enableNode);
+
   return data.contracts;
 }
 
@@ -147,6 +148,7 @@ function populateTotals(systemForm: HTMLElement, data: ParsedResults)
   {
     var totalNode = document.createElement('li');
     totalNode.classList.add(filteredItems.get(key).split(' ')[0]);
+    totalNode.classList.add("list-group-item");
     totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${Utils.formatNumber(value)}`));
     totalsRoot.appendChild(totalNode);
   }
