@@ -55,11 +55,30 @@
       <div class="row row-cols-1 row-cols-md-3 g-4" id="system-list"></div>
     </div>
   </body>
+
+
+  <div class="modal fade" id="closeModal" tabindex=-1>
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Remove system?</h2>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to remove <span id="removeSystemName"></span>?
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" data-bs-dismiss="modal">Remove</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="system-template" class="col" style="display: none;">
     <div class="card text-white bg-secondary system-list">
       <div class="card-header">
         <span class="system-title"></span>
-        <button class="btn-close remove-system" aria-label="Remove System"></button>
+        <button class="btn-close remove-system" data-bs-toggle="modal" data-bs-target="#closeModal" aria-label="Remove System"></button>
       </div>
       <div class="card-body">
         <div class="card-text">

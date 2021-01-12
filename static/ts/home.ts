@@ -67,7 +67,6 @@ function createSystemInfo(systemName: string): HTMLElement
   newTemplate.querySelector(".system-title").textContent = systemName;
   enableNode(newTemplate);
   systemList.appendChild(newTemplate);
-  newTemplate.querySelector(".remove-system").addEventListener("click", function() { removeSystem(systemName); })
 
   if (!userSystems.includes(systemName))
   {
@@ -260,6 +259,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 
+  const closeModal = document.querySelector("#closeModal");
+  closeModal.addEventListener("show.bs.modal", function(event: any) {
+    const systemName: string = Utils.queryNeighbor(event.relatedTarget, ".system-title").textContent;
+
+    closeModal.querySelector("#removeSystemName").textContent = systemName;
+    (closeModal.querySelector(".btn-primary") as HTMLInputElement).onclick = function () { removeSystem(systemName); };
+  });
+
   populateList();
 
   window.setInterval(timerFunc, 1000);
@@ -273,6 +280,11 @@ namespace Utils {
     {
       node.removeChild(node.firstChild);
     }
+  }
+
+  export function queryNeighbor(node: HTMLElement, selector: string)
+  {
+    return node.parentElement.querySelector(selector);
   }
 
   export function formatTime(time: number): string
