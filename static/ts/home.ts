@@ -31,7 +31,8 @@ const filteredItems: Map<number, string> = new Map(
   [17887, "Oxygen Isotopes"],
   [17889, "Hydrogen Isotopes"],
   [16274, "Helium Isotopes"],
-  [16275, "Stront"]
+  [16275, "Stront"],
+  [41489, "Cap Booster 3200s"],
 ]);
 
 
@@ -63,11 +64,9 @@ function createSystemInfo(systemName: string): HTMLElement
   // Create new list entry and add to the list.
   const newTemplate: HTMLElement = systemTemplate.cloneNode(true) as HTMLElement;
   newTemplate.id = `system-${systemName}`;
-  newTemplate.classList.add("system-list");
   newTemplate.querySelector(".system-title").textContent = systemName;
   enableNode(newTemplate);
   systemList.appendChild(newTemplate);
-  newTemplate.querySelector(".remove-system").addEventListener("click", function() { removeSystem(systemName); })
 
   if (!userSystems.includes(systemName))
   {
@@ -134,7 +133,8 @@ async function loadData(system: string): Promise<number>
   populateNonAllianceContracts(systemForm, data);
 
   disableNode(systemForm.querySelector(".loading-text"));
-  enableNode(systemForm.querySelector(".contract-data"));
+  systemForm.querySelectorAll(".contract-data").forEach(enableNode);
+
   return data.contracts;
 }
 
@@ -147,6 +147,8 @@ function populateTotals(systemForm: HTMLElement, data: ParsedResults)
   {
     var totalNode = document.createElement('li');
     totalNode.classList.add(filteredItems.get(key).split(' ')[0]);
+    totalNode.classList.add("list-group-item");
+    totalNode.classList.add("bg-secondary");
     totalNode.appendChild(document.createTextNode(`${filteredItems.get(key)}: ${Utils.formatNumber(value)}`));
     totalsRoot.appendChild(totalNode);
   }
@@ -257,6 +259,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 
+  const closeModal = document.querySelector("#closeModal");
+  closeModal.addEventListener("show.bs.modal", function(event: any) {
+    const systemName: string = Utils.queryNeighbor(event.relatedTarget, ".system-title").textContent;
+
+    closeModal.querySelector("#removeSystemName").textContent = systemName;
+    (closeModal.querySelector(".btn-primary") as HTMLInputElement).onclick = function () { removeSystem(systemName); };
+  });
+
   populateList();
 
   window.setInterval(timerFunc, 1000);
@@ -270,6 +280,11 @@ namespace Utils {
     {
       node.removeChild(node.firstChild);
     }
+  }
+
+  export function queryNeighbor(node: HTMLElement, selector: string)
+  {
+    return node.parentElement.querySelector(selector);
   }
 
   export function formatTime(time: number): string

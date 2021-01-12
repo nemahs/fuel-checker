@@ -1,67 +1,35 @@
 
-body {
-  background-color: #140d0f;
-  color: antiquewhite;
-}
+ .system-list {
+  // background-color: #202020!important;
+  // border: 1px solid darkslategrey;
+   //border-radius: 8px;
 
-a {
-  color: lightblue;
-}
+   .remove-system {
+     float: right;
+   }
 
-#login-header {
-  float: right;
-}
+   .contract-data {
+     display: none;
+   }
 
-
-#system-list {
-  width: 100%;
-  height: 50%;
-  display: grid;
-  grid-auto-flow: row;
-  grid-template-columns: 33% 33% 33%;
-  padding-top: 3em;
-}
-
-/* TODO: Replace with Bootstrap colors */
-
-.system-list {
-  background-color: #202020;
-  border: 1px solid darkslategrey;
-  border-radius: 8px;
-  width: 90%;
-  padding: .5em;
-  padding-top: .2em;
-
-  .remove-system {
-    background: none;
-    border: none;
-    float: right;
-    color: inherit;
-  }
-
-  .contract-number {
-    font-size: 3em;
-    font-weight: bold;
-  }
-
-  ul {
-    list-style: none;
-    padding-left: 0;
-  }
-}
+//   .contract-number {
+//     font-size: 3em;
+//     font-weight: bold;
+//   }
+ }
 
 .gallente,.Oxygen {
-  color: #576866;
+  color: #c9d3c5;
 }
 
 .amarr,.Helium {
-  color: #bba183;
+  color: #dbccbd;
 }
 
 .minmatar,.Nitrogen {
-  color: #8c5055;
+  color: #dabec1;
 }
 
 .caldari,.Hydrogen {
-  color: #819f8a;
+  color: #c9cbcf;
 }
