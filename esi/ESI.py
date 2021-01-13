@@ -1,7 +1,7 @@
 """Provides an framework for making calls to EVE's ESI API."""
 from typing import List, Callable, Any
 from functools import reduce
-from .CommonFunctions import _makeCall, _makePagedCall, METHOD
+from .CommonFunctions import _makeCall, _makePagedCall, METHOD, _timed_lru_cache
 
 def getIDs(names : List[str]):
     """Get IDs from a set of names.
@@ -77,6 +77,7 @@ def getCorpAssets(corp_id: int, auth_token: str):
     return _makeCall(f"corporations/{corp_id}/assets/", auth_token)
 
 
+@_timed_lru_cache(3600)
 def getContractDetails(contract_id: int, auth_token: str, corp_id: int = None, character_id: int = None):
     """Get the details of a given contract.
 
@@ -96,6 +97,7 @@ def getContractDetails(contract_id: int, auth_token: str, corp_id: int = None, c
     return _makeCall(endpoint, auth_token)
 
 
+@_timed_lru_cache(3600)
 def getStructureInfo(structure_id: int, auth_token: str):
     """Get info about a given structure.
 
@@ -105,6 +107,7 @@ def getStructureInfo(structure_id: int, auth_token: str):
     return _makeCall(f"universe/structures/{structure_id}", auth_token)
 
 
+@_timed_lru_cache(3600)
 def getCorporationInfo(corp_id: int):
     """Get info on a given corporation.
 

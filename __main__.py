@@ -150,13 +150,21 @@ def getContracts() -> Response:
 @app.route("/contracts/<string:name>")
 @esi_required
 def getSystemContracts(name: str) -> Response:
+  import time
+  start = time.perf_counter()
   result = esi.getCorpContracts(GOON_CORP_ID, authToken)
   result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID and contract['status'] == 'outstanding' and contract['type'] == 'item_exchange']
+  middle = time.perf_counter()
+  print(f"Getting/filtering contracts: {middle - start}")
   systems = {contract['start_location_id'] for contract in result}
   structures = {system: esi.getStructureInfo(system, authToken)['solar_system_id'] for system in systems}
+  end = time.perf_counter()
+  print(f"Getting structures: {end - middle}")
   systemContracts = [contract for contract in result if structures[contract['start_location_id']] == systemList[name][0]]
 
   populateDetails(systemContracts)
+
+  print(f"Contract time: {time.perf_counter() - start}")
   return jsonify(systemContracts)
 
 @app.route("/logout")

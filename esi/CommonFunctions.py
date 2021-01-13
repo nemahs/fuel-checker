@@ -1,5 +1,7 @@
 """Common ESI functions for making calls to ESI."""
 from gevent import monkey
+from functools import lru_cache, wraps
+from datetime import datetime, timedelta
 monkey.patch_all()
 
 from enum import Enum
@@ -80,3 +82,22 @@ def _makePagedCall(endpoint: str, access_token: str = None, version: str = "late
     return result
   else:
     raise Exception("Failed to contact ESI: " +  response.text + f"\nURL: {BASE_URL}/{version}/{endpoint}")
+
+
+def _timed_lru_cache(timer: int, maxItems:int = 128):
+  def wrapper_cache(func):
+    func = lru_cache(maxsize=maxItems)(func)
+    func.lifetime = timedelta(seconds=timer)
+    func.expiration = datetime.utcnow() + func.lifetime
+
+    @wraps(func)
+    def wrapped_func(*args, **kwargs):
+      if datetime.utcnow() >= func.expiration:
+        func.cache_clear()
+        func.expiration = datetime.utcnow() + func.lifetime
+
+      return func(*args, *kwargs)
+    
+    return wrapped_func
+
+  return wrapper_cache
