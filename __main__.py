@@ -37,7 +37,7 @@ with open_text(__package__, 'systems.txt') as systems:
 
   for line in systemFile:
     splitLine = line.split(',')
-    systemList[splitLine[0].rstrip()] = int(splitLine[1].rstrip())
+    systemList[splitLine[0].rstrip()] = int(splitLine[1].rstrip()),splitLine[2].rstrip()
 
 @login_manager.user_loader
 def load_user(user_id) -> Optional[User]:
@@ -79,7 +79,7 @@ def homepage():
     print(current_user.systemList)
   return render_template("index.html", 
     loginURL=esi.getLoginURL(CLIENT_ID, "http://localhost:5000/login", SCOPES),
-    systemList=systemList.keys()
+    systemList=systemList
   )
 
 @app.route("/login")
@@ -154,7 +154,7 @@ def getSystemContracts(name: str) -> Response:
   result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID and contract['status'] == 'outstanding' and contract['type'] == 'item_exchange']
   systems = {contract['start_location_id'] for contract in result}
   structures = {system: esi.getStructureInfo(system, authToken)['solar_system_id'] for system in systems}
-  systemContracts = [contract for contract in result if structures[contract['start_location_id']] == systemList[name]]
+  systemContracts = [contract for contract in result if structures[contract['start_location_id']] == systemList[name][0]]
 
   populateDetails(systemContracts)
   return jsonify(systemContracts)

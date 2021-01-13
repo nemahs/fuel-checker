@@ -28,8 +28,8 @@
         <form class="d-flex me-3" id="add-system-form">
           <input type="text" id="systemName" placeholder="Add System" list="systems" />
           <datalist id="systems">
-            {% for system in systemList %}
-              <option>{{system}}</option>
+            {% for system,region in systemList.items() %}
+              <option value="{{system}}">{{system}} ({{region.1}})</option>
             {% endfor %}
           </datalist>
           <button type="submit" class="btn btn-secondary" id="add-system">+Add</button>

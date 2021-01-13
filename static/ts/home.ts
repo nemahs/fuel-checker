@@ -203,6 +203,7 @@ function parseData(htmlResponse): ParsedResults
 {
   var result = new ParsedResults();
 
+  console.log(htmlResponse);
   for (let contract of htmlResponse)
   {
     console.log(contract);
