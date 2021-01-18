@@ -82,6 +82,7 @@ def homepage():
     systemList=systemList
   )
 
+
 @app.route("/login")
 def login():
   code = request.args.get("code")
@@ -157,12 +158,12 @@ def getSystemContracts(name: str) -> Response:
   middle = time.perf_counter()
   print(f"Getting/filtering contracts: {middle - start}")
   systems = {contract['start_location_id'] for contract in result}
-  structures = {system: esi.getStructureInfo(system, authToken)['solar_system_id'] for system in systems}
+  structures = {system: esi.getStructureInfo(system, authToken) for system in systems}
   end = time.perf_counter()
   print(f"Getting structures: {end - middle}")
-  systemContracts = [contract for contract in result if structures[contract['start_location_id']] == systemList[name][0]]
+  systemContracts = [contract for contract in result if structures[contract['start_location_id']]['solar_system_id'] == systemList[name][0]]
 
-  populateDetails(systemContracts)
+  populateDetails(systemContracts, structures)
 
   print(f"Contract time: {time.perf_counter() - start}")
   return jsonify(systemContracts)
@@ -184,7 +185,7 @@ def shutdown_session(exception: Optional[Exception] = None):
   db_session.remove()
 
 
-def populateDetails(contractList):
+def populateDetails(contractList, structures):
   characterNames = esi.getNames([contract['issuer_id'] for contract in contractList])
 
   for contract in contractList:
@@ -192,6 +193,7 @@ def populateDetails(contractList):
     contract['details'] = details
     contract['issuer_name'] = next((name['name'] for name in characterNames if name['id'] == contract['issuer_id']))
     contract['alliance_id'] = esi.getCorporationInfo(contract['issuer_corporation_id'])['alliance_id']
+    contract['structureName'] = structures[contract['start_location_id']]['name']
 
 init_db()
 app.run(debug = True)

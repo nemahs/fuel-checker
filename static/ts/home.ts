@@ -84,7 +84,6 @@ function removeSystem(systemName: string)
   });
 }
 
-
 function populateList()
 {
   if (typeof userSystems === 'undefined')
@@ -126,16 +125,37 @@ async function loadData(system: string): Promise<number>
   const response = await fetch(`/contracts/${system}`);
   const responseData = await response.json();
 
-  const data = parseData(responseData);
-  systemForm.querySelector(".contract-number").textContent = String(data.contracts);
+  const data: Map<string, ParsedResults> = parseData(responseData);
+  console.log(data);
+  const totalContracts: number = Array.from(data.values()).reduce((acc, val) => acc + val.contracts, 0);
+  systemForm.querySelector(".contract-number").textContent = String(totalContracts);
 
-  populateTotals(systemForm, data);
-  populateNonAllianceContracts(systemForm, data);
+  systemForm.querySelectorAll(".structureItem").forEach(structure => structure.remove());
+  data.forEach(function (structureData: ParsedResults, structureName: string) {
+    const STRUCTURE_TEMPLATE: HTMLElement = document.querySelector("#structure-template");
+
+    var structureEntry = STRUCTURE_TEMPLATE.cloneNode(true) as HTMLElement;
+    structureEntry.id = structureName;
+    populateStructure(structureEntry, structureName, structureData);
+
+    console.log(structureEntry);
+    systemForm.querySelector(".system-list").appendChild(structureEntry);
+    enableNode(structureEntry);
+  });
+
 
   disableNode(systemForm.querySelector(".loading-text"));
   systemForm.querySelectorAll(".contract-data").forEach(enableNode);
 
-  return data.contracts;
+  return totalContracts;
+}
+
+function populateStructure(structureNode: HTMLElement, structureName: string, data: ParsedResults)
+{
+  structureNode.querySelector(".structureOverview").textContent = `${data.contracts} contracts:  ${structureName}`;
+  var structureDetails: HTMLElement = structureNode.querySelector(".structureDetails");
+  populateTotals(structureDetails, data);
+  populateNonAllianceContracts(structureDetails, data);
 }
 
 function populateTotals(systemForm: HTMLElement, data: ParsedResults)
@@ -153,7 +173,6 @@ function populateTotals(systemForm: HTMLElement, data: ParsedResults)
     totalsRoot.appendChild(totalNode);
   }
 }
-
 
 function populateNonAllianceContracts(systemForm: HTMLElement, data: ParsedResults)
 {
@@ -199,21 +218,26 @@ function countItem(itemID: number, data: ContractData, result: ParsedResults): b
   return success;
 }
 
-function parseData(htmlResponse): ParsedResults
+function parseData(htmlResponse: any): Map<string, ParsedResults>
 {
-  var result = new ParsedResults();
+  var testResult: Map<string, ParsedResults> = new Map();
 
   console.log(htmlResponse);
-  for (let contract of htmlResponse)
+  for (const contract of htmlResponse)
   {
-    console.log(contract);
-
     var success: boolean = false;
+
+    if (!testResult.has(contract.structureName))
+    {
+      testResult.set(contract.structureName, new ParsedResults());
+    }
+
+    var structureResult: ParsedResults = testResult.get(contract.structureName);
     
 
     for (const item of filteredItems.keys())
     {
-      success ||= countItem(+item, contract, result);
+      success ||= countItem(+item, contract, structureResult);
     }
 
     if (success)
@@ -221,15 +245,15 @@ function parseData(htmlResponse): ParsedResults
       // Filter out non-alliance contracts
       if (contract.alliance_id !== GOON_ALLIANCE_ID)
       {
-        ++result.nonAllianceContracts;
-        result.nonAllianceName.add(contract.issuer_name);
+        ++structureResult.nonAllianceContracts;
+        structureResult.nonAllianceName.add(contract.issuer_name);
         continue;
       }
-      ++result.contracts;
+      ++structureResult.contracts;
     }
   }
 
-  return result;
+  return testResult;
 }
 
 const REFRESH_INTERVAL_SECONDS: number = 120;
