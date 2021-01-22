@@ -24,7 +24,6 @@ interface ContractData {
 
 declare var userSystems: Array<string>;
 
-
 const filteredItems: Map<number, string> = new Map( 
 [
   [17888, "Nitrogen Isotopes"],
@@ -35,6 +34,7 @@ const filteredItems: Map<number, string> = new Map(
   [41489, "Cap Booster 3200s"],
 ]);
 
+const structureOpen: Map<string, boolean> = new Map();
 
 const GOON_ALLIANCE_ID: number = 1354830081;
 const ORIGINAL_TITLE: string = document.title;
@@ -130,7 +130,14 @@ async function loadData(system: string): Promise<number>
   const totalContracts: number = Array.from(data.values()).reduce((acc, val) => acc + val.contracts, 0);
   systemForm.querySelector(".contract-number").textContent = String(totalContracts);
 
-  systemForm.querySelectorAll(".structureItem").forEach(structure => structure.remove());
+  systemForm.querySelectorAll(".structureItem").forEach(function (structure: HTMLElement) {
+    let details: HTMLElement = structure.querySelector(".structureDetails");
+    structureOpen.set(details.getAttribute("structure"), details.classList.contains("show"));
+    structure.remove();
+  });
+
+  console.log(structureOpen);
+
   data.forEach(function (structureData: ParsedResults, structureName: string) {
     const STRUCTURE_TEMPLATE: HTMLElement = document.querySelector("#structure-template");
 
@@ -138,7 +145,6 @@ async function loadData(system: string): Promise<number>
     structureEntry.id = structureName;
     populateStructure(structureEntry, structureName, structureData);
 
-    console.log(structureEntry);
     systemForm.querySelector(".system-list").appendChild(structureEntry);
     enableNode(structureEntry);
   });
@@ -154,6 +160,14 @@ function populateStructure(structureNode: HTMLElement, structureName: string, da
 {
   structureNode.querySelector(".structureOverview").textContent = `${data.contracts} contracts:  ${structureName}`;
   var structureDetails: HTMLElement = structureNode.querySelector(".structureDetails");
+
+  structureDetails.setAttribute("structure", structureName);
+
+  if (structureOpen.get(structureName))
+  {
+    structureDetails.classList.add("show");
+  }
+
   populateTotals(structureDetails, data);
   populateNonAllianceContracts(structureDetails, data);
 }
