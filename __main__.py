@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sassutils.wsgi import SassMiddleware
 
 from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from importlib.resources import open_text, path
 from functools import wraps
 
@@ -154,7 +154,12 @@ def getSystemContracts(name: str) -> Response:
   import time
   start = time.perf_counter()
   result = esi.getCorpContracts(GOON_CORP_ID, authToken)
-  result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID and contract['status'] == 'outstanding' and contract['type'] == 'item_exchange']
+  result = [contract for contract in result if contract['assignee_id'] == GOON_CORP_ID
+                                           and contract['status'] == 'outstanding' 
+                                           and contract['type'] == 'item_exchange'
+                                           and datetime.strptime(contract['date_expired'], "%Y-%m-%dT%H:%M:%SZ") > datetime.utcnow()]
+
+  print(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"))
   middle = time.perf_counter()
   print(f"Getting/filtering contracts: {middle - start}")
   systems = {contract['start_location_id'] for contract in result}

@@ -239,7 +239,7 @@ function parseData(htmlResponse: any): Map<string, ParsedResults>
   console.log(htmlResponse);
   for (const contract of htmlResponse)
   {
-    var success: boolean = false;
+    let success: boolean = false;
 
     if (!testResult.has(contract.structureName))
     {
@@ -263,6 +263,7 @@ function parseData(htmlResponse: any): Map<string, ParsedResults>
         structureResult.nonAllianceName.add(contract.issuer_name);
         continue;
       }
+      console.log(contract);
       ++structureResult.contracts;
     }
   }
