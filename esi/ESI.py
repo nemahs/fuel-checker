@@ -104,7 +104,13 @@ def getStructureInfo(structure_id: int, auth_token: str):
     @param structure_id     Structure to get info on.
     @param auth_token       Character auth token.
     """
-    return _makeCall(f"universe/structures/{structure_id}", auth_token)
+
+    if structure_id < 100000000:
+        result = _makeCall(f"universe/stations/{structure_id}", auth_token)
+        result['solar_system_id'] = result['system_id']
+        return result
+    else:
+        return _makeCall(f"universe/structures/{structure_id}", auth_token)
 
 
 @_timed_lru_cache(3600)

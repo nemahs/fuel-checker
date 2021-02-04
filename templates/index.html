@@ -8,7 +8,8 @@
     {% if current_user.is_authenticated %}
       <script type="text/javascript">var userSystems = JSON.parse('{{ current_user.systemList|tojson }}');</script>
     {% endif %}
-    <script src="{{url_for('static', filename='js/home.js')}}"></script>
+
+    <script src="{{ url_for('static', filename='js/home.js')}}"></script>
 
 
     <!--Bootstrap-->
@@ -72,7 +73,8 @@
     </div>
   </div>
 
-  <div id="system-template" class="col" style="display: none;">
+  <template id="system-template">
+  <div class="col">
     <div class="card text-white bg-secondary system-list">
       <div class="card-header">
         <span class="system-title"></span>
@@ -86,16 +88,19 @@
       </div>
     </div>
   </div>
+  </template>
 
-  <div id="structure-template" class="card-body structureItem" style="display:none;">
-    <button class="structureOverview btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target=".structureOverview:hover + .structureDetails"></button>
-    <div class="structureDetails collapse">
-      <ul class="contract-data totals list-group list-group-flush"></ul>
+  <template id="structure-template">
+    <div class="card-body structureItem">
+      <button class="structureOverview btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target=".structureOverview:hover + .structureDetails"></button>
+      <div class="structureDetails collapse">
+        <ul class="contract-data totals list-group list-group-flush"></ul>
 
-      <div class="nonAllianceContracts" style="display:none;">
-        <button class="btn" data-toggle="collapse" data-target=".nameList" aria-expanded="false"><span class="nonAllianceNumber"></span> non-alliance contracts</br /></button>
-        <ul class="nameList collapse.show"></ul>
-      </div>
-    </div> 
-  </div>
+        <div class="nonAllianceContracts" style="display:none;">
+          <button class="btn" data-toggle="collapse" data-target=".nameList" aria-expanded="false"><span class="nonAllianceNumber"></span> non-alliance contracts</br /></button>
+          <ul class="nameList collapse.show"></ul>
+        </div>
+      </div> 
+    </div>
+  </template>
 </html>

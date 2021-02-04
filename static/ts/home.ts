@@ -13,6 +13,45 @@ class ParsedResults
   }
 }
 
+class StructureData extends HTMLElement
+{
+  private static get StructureTemplate() : HTMLTemplateElement { return document.querySelector("#structure-template"); }
+
+  populateData(data: ParsedResults)
+  {
+    this.overview.textContent = `${data.contracts} contracts:  ${this.structureName}`;
+
+    if (structureOpen.get(this.structureName))
+    {
+      this.details.classList.add("show");
+    }
+
+    populateTotals(this.details, data);
+    populateNonAllianceContracts(this.details, data);
+  }
+
+  get details(): HTMLElement { return this.querySelector(".structureDetails"); }
+  get overview(): HTMLElement { return this.querySelector(".structureOverview"); }
+  get structureName(): string { return this.details.getAttribute("structure"); }
+  set structureName(name: string) { this.details.setAttribute("structure", name); }
+  get isShown(): boolean { return this.details.classList.contains("show"); }
+
+
+  constructor(name: string, data?: ParsedResults) { 
+    super();
+    this.append(StructureData.StructureTemplate.content.cloneNode(true)); 
+    console.log(this);
+    this.structureName = name;
+
+    if (data)
+    {
+      this.populateData(data);
+    }
+  }
+}
+
+customElements.define('structure-data', StructureData);
+
 interface ItemData {
   type_id: number;
   quantity: number;
@@ -23,6 +62,7 @@ interface ContractData {
 }
 
 declare var userSystems: Array<string>;
+let savedContractTotal: number = 0;
 
 const filteredItems: Map<number, string> = new Map( 
 [
@@ -51,7 +91,7 @@ function getSystemNode(systemName: string): HTMLElement
 
 function createSystemInfo(systemName: string): HTMLElement
 {
-  const systemTemplate: HTMLElement = document.querySelector("#system-template");
+  const systemTemplate: HTMLTemplateElement = document.querySelector("#system-template");
   const systemList: HTMLElement = document.querySelector("#system-list");
 
 
@@ -62,11 +102,12 @@ function createSystemInfo(systemName: string): HTMLElement
   }
 
   // Create new list entry and add to the list.
-  const newTemplate: HTMLElement = systemTemplate.cloneNode(true) as HTMLElement;
+  const newTemplate: HTMLElement = systemTemplate.content.firstElementChild.cloneNode(true) as HTMLElement;
   newTemplate.id = `system-${systemName}`;
+  console.log(newTemplate);
   newTemplate.querySelector(".system-title").textContent = systemName;
-  enableNode(newTemplate);
   systemList.appendChild(newTemplate);
+  enableNode(newTemplate);
 
   if (!userSystems.includes(systemName))
   {
@@ -103,6 +144,15 @@ function populateList()
     {
       console.log(`${totalContracts} available to fill, setting title.`);
       document.title = `(${totalContracts}) ${ORIGINAL_TITLE}`;
+
+
+      const newContracts: number = totalContracts - savedContractTotal;
+      if (newContracts > 0)
+      {
+        Utils.notifyUser(`${newContracts} new contracts since last update`);
+      }
+
+      savedContractTotal = totalContracts;
     }
     else
     {
@@ -130,20 +180,16 @@ async function loadData(system: string): Promise<number>
   const totalContracts: number = Array.from(data.values()).reduce((acc, val) => acc + val.contracts, 0);
   systemForm.querySelector(".contract-number").textContent = String(totalContracts);
 
-  systemForm.querySelectorAll(".structureItem").forEach(function (structure: HTMLElement) {
-    let details: HTMLElement = structure.querySelector(".structureDetails");
-    structureOpen.set(details.getAttribute("structure"), details.classList.contains("show"));
+  systemForm.querySelectorAll(".structureItem").forEach(function (structure: StructureData) {
+    structureOpen.set(structure.structureName, structure.isShown);
     structure.remove();
   });
 
   console.log(structureOpen);
 
   data.forEach(function (structureData: ParsedResults, structureName: string) {
-    const STRUCTURE_TEMPLATE: HTMLElement = document.querySelector("#structure-template");
-
-    var structureEntry = STRUCTURE_TEMPLATE.cloneNode(true) as HTMLElement;
+    var structureEntry = new StructureData(structureName, structureData);
     structureEntry.id = structureName;
-    populateStructure(structureEntry, structureName, structureData);
 
     systemForm.querySelector(".system-list").appendChild(structureEntry);
     enableNode(structureEntry);
@@ -154,22 +200,6 @@ async function loadData(system: string): Promise<number>
   systemForm.querySelectorAll(".contract-data").forEach(enableNode);
 
   return totalContracts;
-}
-
-function populateStructure(structureNode: HTMLElement, structureName: string, data: ParsedResults)
-{
-  structureNode.querySelector(".structureOverview").textContent = `${data.contracts} contracts:  ${structureName}`;
-  var structureDetails: HTMLElement = structureNode.querySelector(".structureDetails");
-
-  structureDetails.setAttribute("structure", structureName);
-
-  if (structureOpen.get(structureName))
-  {
-    structureDetails.classList.add("show");
-  }
-
-  populateTotals(structureDetails, data);
-  populateNonAllianceContracts(structureDetails, data);
 }
 
 function populateTotals(systemForm: HTMLElement, data: ParsedResults)
@@ -355,5 +385,28 @@ namespace Utils {
     }
 
     return Math.floor(number / 1000) + "," + String(number % 1000).padStart(3, '0');
+  }
+
+
+  export function notifyUser(message: string)
+  {
+    if (!("Notification" in window))
+    {
+      alert("This brosers does not support desktop notifications");
+    }
+
+    else if (Notification.permission === "granted")
+    {
+      let notification = new Notification(message);
+    }
+    else if (Notification.permission !== "denied")
+    {
+      Notification.requestPermission().then(function (granted: string) {
+        if (granted === "granted")
+        {
+          let notification = new Notification(message);
+        }
+      });
+    }
   }
 }
