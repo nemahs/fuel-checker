@@ -9,6 +9,8 @@
       <script type="text/javascript">var userSystems = JSON.parse('{{ current_user.systemList|tojson }}');</script>
     {% endif %}
 
+    <script src="{{url_for('static', filename='js/Utils.js')}}"></script>
+    <script src="{{url_for('static', filename='js/ESI.js')}}"></script>
     <script src="{{ url_for('static', filename='js/home.js')}}"></script>
 
 
