@@ -5,12 +5,38 @@ class ParsedResults
   totals: Map<number, number>;
   nonAllianceName: Set<string>;
   nonAllianceContracts: number;
+  name: string;
 
-  constructor() {
+  constructor(name: string = "") {
+    this.name = name;
     this.contracts = 0;
     this.totals = new Map();
     this.nonAllianceContracts = 0;
     this.nonAllianceName = new Set();
+  }
+
+  add(other: ParsedResults)
+  {
+    this.contracts += other.contracts;
+    this.nonAllianceContracts += other.contracts;
+
+    // Union set
+    for (let allianceName of other.nonAllianceName)
+    {
+      this.nonAllianceName.add(allianceName);
+    }
+
+    // Merge totals maps.
+    other.totals.forEach(function (key, value) {
+      if (this.totals.has(key))
+      {
+        this.totals.set(key, this.totals.get(key) + value);
+      }
+      else
+      {
+        this.totals.set(key, value);
+      }
+    });
   }
 }
 

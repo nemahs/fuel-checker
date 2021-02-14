@@ -162,11 +162,11 @@ def getSystemContracts(name: str) -> Response:
   print(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"))
   middle = time.perf_counter()
   print(f"Getting/filtering contracts: {middle - start}")
-  systems = {contract['end_location_id'] for contract in result}
+  systems = {contract['start_location_id'] for contract in result}
   structures = {system: esi.getStructureInfo(system, authToken) for system in systems}
   end = time.perf_counter()
   print(f"Getting structures: {end - middle}")
-  systemContracts = [contract for contract in result if structures[contract['end_location_id']]['solar_system_id'] == systemList[name][0]]
+  systemContracts = [contract for contract in result if structures[contract['start_location_id']]['solar_system_id'] == systemList[name][0]]
 
   populateDetails(systemContracts, structures)
 

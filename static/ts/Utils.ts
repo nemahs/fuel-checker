@@ -49,21 +49,27 @@ namespace Utils {
   {
     if (!("Notification" in window))
     {
-      alert("This brosers does not support desktop notifications");
+      alert("This browser does not support desktop notifications");
     }
 
     else if (Notification.permission === "granted")
     {
-      let notification = new Notification(message);
+      console.log(`Notifying user: ${message}`);
+      let notification = new Notification("New fuel contracts", {body: message});
     }
     else if (Notification.permission !== "denied")
     {
       Notification.requestPermission().then(function (granted: string) {
+        console.log(`Notification request returned: ${granted}`);
         if (granted === "granted")
         {
           let notification = new Notification(message);
         }
       });
+    }
+    else
+    {
+      alert(Notification.permission);
     }
   }
 }

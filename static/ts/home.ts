@@ -114,7 +114,7 @@ function populateList()
   filteredSystems.forEach(createSystemInfo);
 
   Promise.all(filteredSystems.map(system => loadData(system))).then((values) => {
-    const totalContracts: number = values.reduce((acc, x) => acc + x, 0);
+    const totalContracts: number = values.reduce((acc, x) => acc + x.contracts, 0);
 
     if (totalContracts > 0)
     {
@@ -125,7 +125,12 @@ function populateList()
       const newContracts: number = totalContracts - savedContractTotal;
       if (newContracts > 0)
       {
-        Utils.notifyUser(`${newContracts} new contracts since last update`);
+        let notificationMessage: string = `${newContracts} new contract(s) since last update`;
+        values.forEach(function(results: ParsedResults) {
+            notificationMessage += `\n${results.contracts} currently in ${results.name}`;
+        });
+
+        Utils.notifyUser(notificationMessage);
       }
 
       savedContractTotal = totalContracts;
@@ -138,7 +143,7 @@ function populateList()
   });
 }
 
-async function loadData(system: string): Promise<number>
+async function loadData(system: string): Promise<ParsedResults>
 {
   if (system === "")
   {
@@ -156,12 +161,13 @@ async function loadData(system: string): Promise<number>
   const totalContracts: number = Array.from(data.values()).reduce((acc, val) => acc + val.contracts, 0);
   systemForm.querySelector(".contract-number").textContent = String(totalContracts);
 
-  systemForm.querySelectorAll(".structureItem").forEach(function (structure: StructureData) {
+  systemForm.querySelectorAll("structure-data").forEach(function (structure: StructureData) {
     structureOpen.set(structure.structureName, structure.isShown);
     structure.remove();
   });
 
   console.log(structureOpen);
+  const systemResults: ParsedResults = new ParsedResults(system);
 
   data.forEach(function (structureData: ParsedResults, structureName: string) {
     var structureEntry = new StructureData(structureName, structureData);
@@ -169,13 +175,14 @@ async function loadData(system: string): Promise<number>
 
     systemForm.querySelector(".system-list").appendChild(structureEntry);
     enableNode(structureEntry);
+    systemResults.add(structureData);
   });
 
 
   disableNode(systemForm.querySelector(".loading-text"));
   systemForm.querySelectorAll(".contract-data").forEach(enableNode);
 
-  return totalContracts;
+  return systemResults;
 }
 
 function populateTotals(systemForm: HTMLElement, data: ParsedResults)
