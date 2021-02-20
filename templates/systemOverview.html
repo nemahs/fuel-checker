@@ -1,0 +1,39 @@
+<div>
+
+  <script src="{{ url_for('static', filename='js/fuel.js')}}"></script>
+
+  <div class="container-fluid">
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="system-list"></div>
+  </div>
+
+  <template id="system-template">
+  <div class="col">
+    <div class="card text-white bg-secondary system-list">
+      <div class="card-header">
+        <span class="system-title"></span>
+        <button class="btn-close remove-system" data-bs-toggle="modal" data-bs-target="#closeModal" aria-label="Remove System"></button>
+      </div>
+      <div class="card-body">
+        <div class="card-text">
+          <div class="loading-text"><strong>LOADING...</strong> <div class="spinner-border ms-auto float-end" role="status"></div></div>
+          <h5 class="contract-data card-title"><span class="card-title contract-number"></span> contracts in system<br /></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <template id="structure-template">
+    <div class="card-body structureItem">
+      <button class="structureOverview btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target=".structureOverview:hover + .structureDetails"></button>
+      <div class="structureDetails collapse">
+        <ul class="contract-data totals list-group list-group-flush"></ul>
+
+        <div class="nonAllianceContracts" style="display:none;">
+          <button class="btn" data-toggle="collapse" data-target=".nameList" aria-expanded="false"><span class="nonAllianceNumber"></span> non-alliance contracts</br /></button>
+          <ul class="nameList collapse.show"></ul>
+        </div>
+      </div> 
+    </div>
+  </template>
+</div>

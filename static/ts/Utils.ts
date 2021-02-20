@@ -1,5 +1,10 @@
 
 namespace Utils {
+  export function disableNode(node: HTMLElement) { node.style.display = "none"; }
+  export function enableNode(node: HTMLElement)  { node.style.display = "initial"; }
+
+  export function deactivateNode(node: HTMLElement) { node.classList.remove("active"); }
+  export function activateNode(node: HTMLElement) { node.classList.add("active"); }
 
   export function removeAllChildNodes(node: HTMLElement)
   {

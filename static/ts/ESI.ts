@@ -19,6 +19,7 @@ class ParsedResults
   {
     this.contracts += other.contracts;
     this.nonAllianceContracts += other.contracts;
+    
 
     // Union set
     for (let allianceName of other.nonAllianceName)
@@ -27,7 +28,8 @@ class ParsedResults
     }
 
     // Merge totals maps.
-    other.totals.forEach(function (key, value) {
+    for (let [key, value] of other.totals)
+    {
       if (this.totals.has(key))
       {
         this.totals.set(key, this.totals.get(key) + value);
@@ -36,7 +38,7 @@ class ParsedResults
       {
         this.totals.set(key, value);
       }
-    });
+    }
   }
 }
 
